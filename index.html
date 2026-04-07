@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>CheckDom — Кабінет мешканця</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<noscript><style>.nojs-banner{display:block!important}</style></noscript>
+<style>
+/*========== OPEN IN SAFARI BANNER ==========*/
+.nojs-banner{display:none;background:linear-gradient(135deg,#16b7f1,#0e9fd6);color:#fff;padding:12px 20px;text-align:center;font-size:13px;font-weight:600;position:fixed;top:0;left:0;right:0;z-index:9999;padding-top:calc(env(safe-area-inset-top,0px) + 12px)}
+
+/*========== INLINE EMOJI ICONS ==========*/
+.ico{font-style:normal;display:inline-flex;align-items:center;justify-content:center;line-height:1;text-align:center;flex-shrink:0}
+
+/*========== RESET & VARS ==========*/
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --pri:#16b7f1;--pri-d:#0e9fd6;--suc:#10b981;--warn:#f59e0b;--err:#ef4444;
+  --txt:#101828;--txt2:#667085;--txt3:#98a2b3;
+  --bg:#f5f7fa;--white:#fff;--border:#e8edf3;--border-l:#f2f4f7;
+  --r-s:8px;--r-m:12px;--r-l:16px;--r-xl:20px;
+  --sh-s:0 1px 3px rgba(16,24,40,.06);--sh-m:0 4px 16px rgba(16,24,40,.08);--sh-l:0 12px 40px rgba(16,24,40,.12);
+  --side-w:260px;--top-h:56px;--bot-h:60px;
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;background:var(--bg)}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--txt);line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden;margin:0;padding:0}
+a{color:var(--pri);text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+img{max-width:100%;display:block}
+
+/*========== MOBILE-FIRST LAYOUT ==========*/
+.app{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
+.topbar{position:fixed;top:0;left:0;right:0;min-height:var(--top-h);background:var(--white);border-bottom:1px solid var(--border);z-index:100;display:flex;align-items:center;padding:env(safe-area-inset-top,0px) 12px 0;gap:8px}
+.main{flex:1;padding:calc(var(--top-h) + env(safe-area-inset-top,0px) + 12px) 16px calc(var(--bot-h) + var(--safe-b) + 12px)}
+.bottomnav{position:fixed;bottom:0;left:0;right:0;height:calc(var(--bot-h) + var(--safe-b));padding-bottom:var(--safe-b);background:var(--white);border-top:1px solid var(--border);z-index:100;display:flex;align-items:stretch}
+
+/*========== TOPBAR ==========*/
+.tb-ham{width:44px;height:44px;border:none;background:none;font-size:18px;color:var(--txt);border-radius:var(--r-s);display:flex;align-items:center;justify-content:center}
+.tb-ham:active{background:var(--border-l)}
+.tb-title{flex:1;font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-icon{width:44px;height:44px;border:none;background:none;border-radius:var(--r-m);display:flex;align-items:center;justify-content:center;color:var(--txt2);font-size:18px;position:relative;flex-shrink:0}
+.tb-icon:active{background:var(--border-l)}
+.tb-dot{position:absolute;top:8px;right:8px;width:8px;height:8px;background:var(--err);border-radius:50%;border:2px solid var(--white)}
+.tb-avatar{width:32px;height:32px;border-radius:var(--r-s);background:linear-gradient(135deg,#16b7f1,#49c59b);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+
+/*========== BOTTOM NAV ==========*/
+.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;color:var(--txt3);font-size:10px;font-weight:600;padding:6px 2px;-webkit-tap-highlight-color:transparent;position:relative;min-width:0;transition:color .15s}
+.bn-item .ico{font-size:20px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;line-height:1}
+.bn-item.active{color:var(--pri)}
+.bn-item .bn-badge{position:absolute;top:2px;left:calc(50% + 6px);min-width:16px;height:16px;background:var(--err);color:#fff;font-size:9px;font-weight:700;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid var(--white)}
+
+/*========== SIDEBAR (slide-over on mobile) ==========*/
+.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;opacity:0;visibility:hidden;transition:all .3s}
+.sidebar-overlay.show{opacity:1;visibility:visible}
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:300px;max-width:85vw;background:var(--white);z-index:201;transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden}
+.sidebar.open{transform:translateX(0)}
+.sb-head{padding:16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-l);flex-shrink:0}
+.sb-logo{font-size:22px;font-weight:800;background:linear-gradient(135deg,#16b7f1,#49c59b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sb-close{width:44px;height:44px;border:none;background:var(--border-l);border-radius:var(--r-s);font-size:16px;color:var(--txt2);display:flex;align-items:center;justify-content:center}
+.sb-scroll{flex:1;overflow-y:auto;padding:8px;-webkit-overflow-scrolling:touch}
+.sb-group{margin-bottom:4px}
+.sb-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);padding:12px 12px 4px}
+.sb-item{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:var(--r-m);color:var(--txt2);font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;border:none;background:none;width:100%;text-align:left}
+.sb-item:active,.sb-item:hover{background:var(--bg);color:var(--txt)}
+.sb-item.active{background:linear-gradient(135deg,rgba(22,183,241,.08),rgba(73,197,155,.08));color:var(--pri);font-weight:600}
+.sb-item i{width:20px;text-align:center;font-size:16px;flex-shrink:0}
+.sb-badge{margin-left:auto;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--pri);color:#fff}
+.sb-badge.green{background:var(--suc)}
+.sb-badge.gray{background:var(--border-l);color:var(--txt3)}
+.sb-foot{flex-shrink:0;padding:8px;border-top:1px solid var(--border-l)}
+
+/*========== USER DROPDOWN ==========*/
+.ud-wrap{position:relative}
+.ud{position:fixed;inset:0;z-index:300;display:none;flex-direction:column;justify-content:flex-end;background:rgba(0,0,0,.4)}
+.ud.show{display:flex}
+.ud-sheet{background:var(--white);border-radius:var(--r-xl) var(--r-xl) 0 0;max-height:80vh;overflow-y:auto;animation:sheetUp .3s ease-out;padding-bottom:var(--safe-b)}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.ud-handle{width:36px;height:4px;background:#d0d5dd;border-radius:2px;margin:10px auto}
+.ud-head{padding:16px 20px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border-l)}
+.ud-av{width:48px;height:48px;border-radius:var(--r-l);background:linear-gradient(135deg,#16b7f1,#49c59b);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0}
+.ud-name{font-size:16px;font-weight:700}
+.ud-email{font-size:13px;color:var(--txt2);margin-top:2px}
+.ud-body{padding:8px}
+.ud-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:var(--r-m);color:var(--txt);font-size:14px;font-weight:500;border:none;background:none;width:100%;text-align:left;cursor:pointer}
+.ud-item:active{background:var(--bg)}
+.ud-item i{width:20px;color:var(--txt2);text-align:center}
+.ud-item .arr{margin-left:auto;color:var(--txt3);font-size:12px}
+.ud-div{height:1px;background:var(--border-l);margin:4px 16px}
+.ud-foot{padding:12px 20px;border-top:1px solid var(--border-l);display:flex;align-items:center;justify-content:space-between}
+.ud-lang{display:flex;background:var(--border-l);border-radius:var(--r-s);padding:3px;gap:3px}
+.ud-lang button{border:none;background:none;font-size:13px;font-weight:600;color:var(--txt2);padding:6px 14px;border-radius:6px}
+.ud-lang button.active{background:#fff;color:var(--txt);box-shadow:var(--sh-s)}
+.ud-logout{border:none;background:none;color:var(--err);font-size:14px;font-weight:600;padding:8px 12px;border-radius:var(--r-s)}
+
+/*========== MODAL SYSTEM ==========*/
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal-sheet{background:var(--white);border-radius:var(--r-xl) var(--r-xl) 0 0;width:100%;max-height:85vh;overflow-y:auto;animation:sheetUp .3s ease-out;padding-bottom:calc(16px + var(--safe-b))}
+.modal-handle{width:36px;height:4px;background:#d0d5dd;border-radius:2px;margin:10px auto}
+.modal-head{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-l)}
+.modal-title{font-size:17px;font-weight:700}
+.modal-close{width:36px;height:36px;border:none;background:var(--border-l);border-radius:50%;font-size:14px;color:var(--txt2);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.modal-close:active{background:var(--border)}
+.modal-body{padding:20px}
+.modal-foot{padding:12px 20px;border-top:1px solid var(--border-l);display:flex;gap:8px}
+.modal-foot .btn-pri{flex:1;margin:0}
+.btn-sec{flex:1;border:1px solid var(--border);background:var(--white);color:var(--txt);font-size:14px;font-weight:600;padding:12px;border-radius:var(--r-m);text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.btn-sec:active{background:var(--bg)}
+
+/*========== PAGE COMPONENTS ==========*/
+/* Cards */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r-l);overflow:hidden}
+.card-p{padding:16px}
+
+/* Balance hero */
+.hero{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#16b7f1 100%);border-radius:var(--r-xl);padding:20px;color:#fff;margin-bottom:16px;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;top:-50px;right:-50px;width:160px;height:160px;background:rgba(255,255,255,.06);border-radius:50%}
+.hero-label{font-size:12px;font-weight:500;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.hero-amount{font-size:32px;font-weight:800;letter-spacing:-.02em;margin-bottom:2px}
+.hero-amount small{font-size:16px;font-weight:600}
+.hero-sub{font-size:12px;color:rgba(255,255,255,.55);margin-bottom:16px}
+.hero-btns{display:flex;gap:8px;position:relative;z-index:1}
+.btn-w{display:flex;align-items:center;justify-content:center;gap:6px;background:#fff;color:var(--txt);border:none;border-radius:var(--r-m);padding:11px 18px;font-size:13px;font-weight:700;flex:1;cursor:pointer}
+.btn-w:active{transform:scale(.97)}
+.btn-g{display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:var(--r-m);padding:11px 14px;font-size:13px;font-weight:600;flex:1;cursor:pointer}
+.btn-g:active{background:rgba(255,255,255,.2)}
+
+/* Stats row */
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+.stat{padding:14px;display:flex;align-items:flex-start;gap:12px;cursor:pointer}
+.stat:active{transform:scale(.98)}
+.stat-ic{width:44px;height:44px;border-radius:var(--r-m);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.stat-ic .ico{font-size:18px}
+.stat-v{font-size:20px;font-weight:800;line-height:1.2}
+.stat-l{font-size:12px;color:var(--txt2);margin-top:1px}
+
+/* Section headers */
+.sec{margin-bottom:16px}
+.sec-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sec-t{font-size:15px;font-weight:700}
+.sec-link{font-size:12px;font-weight:600;color:var(--pri);display:flex;align-items:center;gap:4px;cursor:pointer}
+
+/* List items */
+.li{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;cursor:pointer}
+.li+.li{border-top:1px solid var(--border-l)}
+.li-ic{width:40px;height:40px;border-radius:var(--r-m);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.li-body{flex:1;min-width:0}
+.li-title{font-size:14px;font-weight:600}
+.li-desc{font-size:12px;color:var(--txt2);margin-top:2px}
+.li-time{font-size:11px;color:var(--txt3);margin-top:3px}
+.li-arr{color:var(--txt3);font-size:12px;align-self:center;flex-shrink:0}
+.li-badge{margin-left:auto;align-self:center;flex-shrink:0}
+
+/* Quick actions grid */
+.qa{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.qa-item{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 4px;border-radius:var(--r-l);background:var(--white);border:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.qa-item:active{transform:scale(.95);border-color:var(--pri)}
+.qa-ic{width:44px;height:44px;border-radius:var(--r-m);display:flex;align-items:center;justify-content:center;font-size:20px}
+.qa-ic .ico{font-size:20px}
+.qa-label{font-size:11px;font-weight:600;text-align:center;color:var(--txt);line-height:1.3}
+
+/* Poll card */
+.poll{padding:16px;display:flex;flex-direction:column;gap:12px}
+.poll-top{display:flex;gap:12px;align-items:flex-start}
+.poll-ic{width:44px;height:44px;border-radius:var(--r-m);background:#f5f3ff;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.poll-title{font-size:14px;font-weight:600}
+.poll-meta{font-size:12px;color:var(--txt2);margin-top:2px}
+.poll-bar{height:6px;background:var(--border-l);border-radius:3px;overflow:hidden}
+.poll-fill{height:100%;background:linear-gradient(90deg,#7c3aed,#a78bfa);border-radius:3px;transition:width .3s}
+.btn-pri{width:100%;border:none;background:var(--pri);color:#fff;font-size:14px;font-weight:700;padding:12px;border-radius:var(--r-m);display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer}
+.btn-pri:active{background:var(--pri-d);transform:scale(.98)}
+.btn-pri.err{background:var(--err)}
+.btn-pri.err:active{background:#dc2626}
+
+/* Invoice items */
+.inv{padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer}
+.inv+.inv{border-top:1px solid var(--border-l)}
+.inv-ic{width:40px;height:40px;border-radius:var(--r-m);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.inv-body{flex:1;min-width:0;overflow:hidden}
+.inv-title{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.inv-desc{font-size:12px;color:var(--txt2);margin-top:1px}
+.inv-right{text-align:right;flex-shrink:0}
+.inv-amount{font-size:15px;font-weight:700}
+.inv-status{font-size:11px;font-weight:600;margin-top:2px}
+.inv-status.red{color:var(--err)}
+.inv-status.green{color:var(--suc)}
+.inv-status.yellow{color:var(--warn)}
+.btn-sm{border:none;background:var(--pri);color:#fff;font-size:12px;font-weight:700;padding:8px 14px;border-radius:var(--r-s);white-space:nowrap;margin-top:4px;cursor:pointer}
+.btn-sm:active{background:var(--pri-d)}
+
+/* Profile fields */
+.pf{padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.pf+.pf{border-top:1px solid var(--border-l)}
+.pf-label{font-size:12px;color:var(--txt2);margin-bottom:2px}
+.pf-value{font-size:14px;font-weight:600}
+.pf-edit{color:var(--pri);font-size:13px;font-weight:600;border:none;background:none;padding:6px;flex-shrink:0;cursor:pointer}
+
+/* Property card */
+.prop{padding:16px;display:flex;gap:14px;align-items:center;cursor:pointer}
+.prop-ic{width:52px;height:52px;border-radius:var(--r-l);background:linear-gradient(135deg,#dbeafe,#eff6ff);color:#2563eb;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.prop-title{font-size:16px;font-weight:700}
+.prop-sub{font-size:13px;color:var(--txt2);margin-top:2px}
+
+/* Car item */
+.car{padding:16px;display:flex;gap:14px;align-items:center;cursor:pointer}
+.car+.car{border-top:1px solid var(--border-l)}
+.car-ic{width:48px;height:48px;border-radius:var(--r-l);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.car-plate{display:inline-block;background:#fef9c3;border:1px solid #fde047;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:700;font-family:monospace;color:#854d0e;margin-top:4px}
+
+/* Support ticket */
+.tkt{padding:14px 16px;display:flex;gap:12px;align-items:flex-start;cursor:pointer}
+.tkt+.tkt{border-top:1px solid var(--border-l)}
+.tkt-status{width:8px;height:8px;border-radius:50%;margin-top:6px;flex-shrink:0}
+.tkt-status.open{background:var(--warn)}
+.tkt-status.progress{background:var(--pri)}
+.tkt-status.done{background:var(--suc)}
+.tkt-body{flex:1;min-width:0}
+.tkt-id{font-size:11px;color:var(--txt3);font-weight:600}
+.tkt-title{font-size:14px;font-weight:600;margin-top:2px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.tkt-meta{font-size:12px;color:var(--txt2);margin-top:2px}
+
+/* Document item */
+.doc{padding:14px 16px;display:flex;gap:12px;align-items:center;cursor:pointer}
+.doc+.doc{border-top:1px solid var(--border-l)}
+.doc-ic{width:40px;height:40px;border-radius:var(--r-s);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+
+/* Messages */
+.msg{padding:14px 16px;display:flex;gap:12px;align-items:flex-start;cursor:pointer}
+.msg+.msg{border-top:1px solid var(--border-l)}
+.msg.unread{background:#f0f9ff}
+.msg-dot{width:8px;height:8px;background:var(--pri);border-radius:50%;flex-shrink:0;margin-top:6px}
+.msg-dot.read{background:transparent}
+
+/* Settings toggle */
+.stg{padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+.stg+.stg{border-top:1px solid var(--border-l)}
+.stg-left{display:flex;align-items:center;gap:12px}
+.stg-left i{width:20px;color:var(--txt2);text-align:center}
+.toggle{width:44px;height:26px;background:#d0d5dd;border-radius:13px;position:relative;cursor:pointer;transition:background .2s;border:none;flex-shrink:0}
+.toggle.on{background:var(--pri)}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:var(--sh-s)}
+.toggle.on::after{transform:translateX(18px)}
+
+/* Empty state */
+.empty{padding:40px 20px;text-align:center;color:var(--txt2)}
+.empty i{font-size:40px;color:var(--border);margin-bottom:12px;display:block}
+.empty p{font-size:14px;margin-top:8px}
+
+/* Page header with greeting */
+.greet{margin-bottom:16px}
+.greet h1{font-size:22px;font-weight:800}
+.greet p{font-size:13px;color:var(--txt2);margin-top:2px}
+
+/* Tabs */
+.tabs{display:flex;gap:0;background:var(--white);border:1px solid var(--border);border-radius:var(--r-m);padding:3px;margin-bottom:16px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tab{flex:1;min-width:0;border:none;background:none;padding:10px 8px;font-size:13px;font-weight:600;color:var(--txt2);border-radius:var(--r-s);white-space:nowrap;text-align:center;cursor:pointer}
+.tab.active{background:var(--pri);color:#fff}
+
+/* Floating action button */
+.fab{position:fixed;bottom:calc(var(--bot-h) + var(--safe-b) + 16px);right:16px;width:56px;height:56px;background:var(--pri);color:#fff;border:none;border-radius:50%;font-size:20px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(22,183,241,.4);z-index:50;cursor:pointer}
+.fab:active{transform:scale(.9)}
+
+/* Key/pass items */
+.key{padding:14px 16px;display:flex;gap:12px;align-items:center;cursor:pointer}
+.key+.key{border-top:1px solid var(--border-l)}
+.key-ic{width:40px;height:40px;border-radius:var(--r-m);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.key-status{font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:auto;flex-shrink:0}
+.key-status.active{background:#ecfdf5;color:#059669}
+.key-status.blocked{background:#fef2f2;color:#dc2626}
+
+/* Reporting */
+.rpt-row{display:flex;justify-content:space-between;align-items:center;padding:12px 16px}
+.rpt-row+.rpt-row{border-top:1px solid var(--border-l)}
+.rpt-label{font-size:13px;color:var(--txt2)}
+.rpt-val{font-size:14px;font-weight:700}
+
+/* Help center */
+.faq{padding:14px 16px;cursor:pointer}
+.faq+.faq{border-top:1px solid var(--border-l)}
+.faq-q{font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.faq-a{font-size:13px;color:var(--txt2);margin-top:8px;display:none;line-height:1.6}
+.faq.open .faq-a{display:block}
+.faq.open .faq-q i{transform:rotate(180deg)}
+
+/* Pagination */
+.pagination{display:flex;align-items:center;justify-content:center;gap:6px;padding:16px 0}
+.pg-btn{width:44px;height:44px;border:1px solid var(--border);background:var(--white);border-radius:var(--r-s);font-size:13px;font-weight:600;color:var(--txt2);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.pg-btn.active{background:var(--pri);color:#fff;border-color:var(--pri)}
+.pg-btn:disabled{opacity:.4;cursor:default}
+.pg-btn:active:not(:disabled){background:var(--bg)}
+.pg-info{font-size:12px;color:var(--txt3);text-align:center;margin-top:4px}
+
+/* Month picker */
+.month-picker{display:flex;align-items:center;gap:8px;margin-bottom:16px;background:var(--white);border:1px solid var(--border);border-radius:var(--r-m);padding:10px 14px}
+.mp-btn{width:44px;height:44px;border:1px solid var(--border);background:var(--white);border-radius:var(--r-s);font-size:14px;color:var(--txt2);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer}
+.mp-btn:active{background:var(--bg)}
+.mp-label{flex:1;text-align:center;font-size:15px;font-weight:700}
+.mp-sub{font-size:12px;color:var(--txt2);font-weight:400}
+
+/* Pass item */
+.pass{padding:14px 16px;display:flex;gap:12px;align-items:center;cursor:pointer}
+.pass+.pass{border-top:1px solid var(--border-l)}
+.pass-ic{width:44px;height:44px;border-radius:var(--r-m);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.pass-status{font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:auto;flex-shrink:0}
+.pass-status.active{background:#ecfdf5;color:#059669}
+.pass-status.expired{background:#fef2f2;color:#dc2626}
+.pass-status.pending{background:#fff7ed;color:#ea580c}
+
+/* Page hidden by default */
+.page{display:none}
+.page.active{display:block}
+
+/* Notification toast */
+.toast{position:fixed;top:calc(var(--top-h) + env(safe-area-inset-top,0px) + 8px);left:16px;right:16px;background:#0f172a;color:#fff;padding:12px 16px;border-radius:var(--r-m);font-size:13px;font-weight:600;z-index:500;display:none;align-items:center;gap:8px;opacity:0;transform:translateY(-20px);transition:opacity .3s,transform .3s;box-shadow:var(--sh-l)}
+.toast.show{display:flex;opacity:1;transform:translateY(0)}
+
+/* Form inputs */
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--txt)}
+.form-group input,.form-group select{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:var(--r-m);font-size:14px;font-family:inherit;background:var(--white);color:var(--txt)}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(22,183,241,.1)}
+.checkbox-group{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.checkbox-item{display:flex;align-items:center;gap:10px}
+.checkbox-item input[type="checkbox"]{width:18px;height:18px;cursor:pointer}
+.checkbox-item label{margin:0;cursor:pointer;font-weight:500}
+.radio-group{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.radio-item{display:flex;align-items:center;gap:10px}
+.radio-item input[type="radio"]{width:18px;height:18px;cursor:pointer}
+.radio-item label{margin:0;cursor:pointer;font-weight:500}
+
+/* Modal-specific styles */
+.modal-input-row{display:flex;gap:8px;margin-bottom:12px}
+.modal-input-row input{flex:1}
+.emergency-btn{width:100%;padding:16px;background:var(--err);color:#fff;border:none;border-radius:var(--r-m);font-size:16px;font-weight:700;margin-bottom:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.emergency-btn:active{background:#dc2626}
+.emergency-info{padding:12px;background:#fff5f5;border-radius:var(--r-m);border-left:4px solid var(--err);margin-bottom:12px}
+.emergency-info strong{color:var(--err);display:block;margin-bottom:4px}
+.emergency-info ul{margin:0;padding-left:20px;font-size:13px;line-height:1.6;color:var(--txt2)}
+
+/*========== DESKTOP ==========*/
+@media(min-width:769px){
+  .sidebar{transform:translateX(0);width:var(--side-w);border-right:1px solid var(--border)}
+  .sidebar-overlay{display:none!important}
+  .sb-close{display:none}
+  .topbar{left:var(--side-w)}
+  .tb-ham{display:none}
+  .topbar{padding-top:0}
+  .main{margin-left:var(--side-w);padding-top:calc(var(--top-h) + 12px);max-width:none;padding-left:max(24px, calc((100vw - var(--side-w) - 860px) / 2));padding-right:max(24px, calc((100vw - var(--side-w) - 860px) / 2))}
+  .bottomnav{display:none}
+  .main{padding-bottom:24px}
+  .fab{bottom:24px;right:24px}
+  .stats{grid-template-columns:repeat(4,1fr)}
+  .qa{grid-template-columns:repeat(4,1fr)}
+  .hero-amount{font-size:40px}
+  .ud{position:absolute;inset:auto;top:calc(100% + 8px);right:0;background:none;display:none}
+  .ud.show{display:block}
+  .ud-sheet{border-radius:var(--r-xl);border:1px solid var(--border);box-shadow:var(--sh-l);width:360px;animation:dropD .2s ease-out}
+  @keyframes dropD{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+  .ud-handle{display:none}
+  .modal-overlay{align-items:center}
+  .modal-sheet{max-width:480px;border-radius:var(--r-xl);max-height:80vh}
+}
+</style>
+</head>
+<body>
+
+<div class="nojs-banner">
+  ⚠️ Для повної роботи відкрийте файл у Safari: Поділитися → Відкрити у Safari
+</div>
+
+<div class="app">
+<!-- ====== TOPBAR ====== -->
+<header class="topbar">
+  <button class="tb-ham" onclick="openSB()" aria-label="Меню"><span class="ico">☰</span></button>
+  <span class="tb-title" id="pageTitle">Головна</span>
+  <button class="tb-icon" onclick="openNotifModal()" aria-label="Сповіщення"><span class="ico">🔔</span><span class="tb-dot"></span></button>
+  <div class="ud-wrap">
+    <button class="tb-avatar" onclick="toggleUD()" aria-label="Профіль">АК</button>
+    <div class="ud" id="userDrop" onclick="if(event.target===this)closeUD()">
+      <div class="ud-sheet">
+        <div class="ud-handle"></div>
+        <div class="ud-head">
+          <div class="ud-av">АК</div>
+          <div><div class="ud-name">Андрій Кондратьєв</div><div class="ud-email">andrey.kondratiev@yahoo.com</div></div>
+        </div>
+        <div class="ud-body">
+          <button class="ud-item" onclick="go('profile');closeUD()"><span class="ico">👤</span>Мій профіль<span class="arr"><span class="ico">›</span></span></button>
+          <button class="ud-item" onclick="go('settings');closeUD()"><span class="ico">⚙</span>Налаштування<span class="arr"><span class="ico">›</span></span></button>
+          <div class="ud-div"></div>
+          <button class="ud-item" onclick="go('help');closeUD()"><span class="ico">❓</span>Довідка<span class="arr"><span class="ico">›</span></span></button>
+          <div class="ud-div"></div>
+          <button class="ud-logout" onclick="showToast('Вихід');closeUD()">Вийти</button>
+        </div>
+        <div class="ud-foot">
+          <span style="font-size:12px;color:var(--txt2)">Мова:</span>
+          <div class="ud-lang">
+            <button class="active" onclick="showToast('Українська обрана')">УК</button>
+            <button onclick="showToast('Русский - скоро')">РУ</button>
+            <button onclick="showToast('English - coming soon')">EN</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ====== SIDEBAR ====== -->
+<div class="sidebar-overlay" id="sbOverlay" onclick="closeSB()"></div>
+<aside class="sidebar" id="sb">
+  <div class="sb-head">
+    <span class="sb-logo">CheckDom</span>
+    <button class="sb-close" onclick="closeSB()" aria-label="Закрити меню"><span class="ico">✕</span></button>
+  </div>
+  <div class="sb-scroll">
+    <div class="sb-group">
+      <div class="sb-label">Основне</div>
+      <button class="sb-item active" data-page="home" onclick="go('home')"><span class="ico">🏠</span>Головна<span class="sb-badge gray">12</span></button>
+      <button class="sb-item" data-page="invoices" onclick="go('invoices')"><span class="ico">📄</span>Оплата рахунків<span class="sb-badge">3</span></button>
+      <button class="sb-item" data-page="wallet" onclick="go('wallet')"><span class="ico">💰</span>Гаманець</button>
+      <button class="sb-item" data-page="reports" onclick="go('reports')"><span class="ico">📊</span>Мої нарахування</button>
+    </div>
+    <div class="sb-group">
+      <div class="sb-label">Управління нерухомістю</div>
+      <button class="sb-item" data-page="property" onclick="go('property')"><span class="ico">🏢</span>Моя нерухомість</button>
+      <button class="sb-item" data-page="cars" onclick="go('cars')"><span class="ico">🚗</span>Автопарк</button>
+      <button class="sb-item" data-page="keys" onclick="go('keys')"><span class="ico">🔑</span>Ключі та доступ</button>
+    </div>
+    <div class="sb-group">
+      <div class="sb-label">Комунікація</div>
+      <button class="sb-item" data-page="messages" onclick="go('messages')"><span class="ico">📥</span>Повідомлення<span class="sb-badge">5</span></button>
+      <button class="sb-item" data-page="docs" onclick="go('docs')"><span class="ico">📃</span>Документи</button>
+      <button class="sb-item" data-page="polls" onclick="go('polls')"><span class="ico">📊</span>Опитування</button>
+    </div>
+    <div class="sb-group">
+      <div class="sb-label">Підтримка</div>
+      <button class="sb-item" data-page="support" onclick="go('support')"><span class="ico">🛟</span>Підтримка<span class="sb-badge green">Open</span></button>
+      <button class="sb-item" data-page="products" onclick="go('products')"><span class="ico">📦</span>Програмні продукти</button>
+      <button class="sb-item" data-page="help" onclick="go('help')"><span class="ico">❓</span>Довідковий центр</button>
+    </div>
+  </div>
+  <div class="sb-foot">
+    <button class="sb-item" data-page="profile" onclick="go('profile')"><span class="ico">👤</span>Профіль</button>
+    <button class="sb-item" data-page="settings" onclick="go('settings')"><span class="ico">⚙</span>Налаштування</button>
+  </div>
+</aside>
+
+<!-- ====== MAIN ====== -->
+<main class="main">
+
+<!-- PAGE: Home -->
+<div class="page active" id="p-home">
+  <div class="greet"><h1>Привіт, Андрій</h1><p>ЖК «Paradise Avenue» &middot; вул. Панорамна 2, кв. 298</p></div>
+  <div class="hero">
+    <div class="hero-label"><span class="ico">💰</span> Поточний баланс</div>
+    <div class="hero-amount">-1 250,00 <small>грн</small></div>
+    <div class="hero-sub">Загальна заборгованість на березень 2026 &middot; Оплатити до 09.04.2026 23:59</div>
+    <div class="hero-btns">
+      <button class="btn-w" onclick="openPaymentModal('1 250,00 ₴')"><span class="ico">💳</span> Оплатити</button>
+      <button class="btn-g" onclick="go('reports')"><span class="ico">📈</span> Деталі</button>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="card stat" onclick="go('invoices')"><div class="stat-ic" style="background:#fff7ed;color:#ea580c"><span class="ico">📄</span></div><div><div class="stat-v">3</div><div class="stat-l">Неоплачені</div></div></div>
+    <div class="card stat" onclick="go('messages')"><div class="stat-ic" style="background:#eff8ff;color:#2563eb"><span class="ico">✉️</span></div><div><div class="stat-v">5</div><div class="stat-l">Повідомлень</div></div></div>
+    <div class="card stat" onclick="go('docs')"><div class="stat-ic" style="background:#ecfdf5;color:#059669"><span class="ico">📂</span></div><div><div class="stat-v">2</div><div class="stat-l">Нові документи</div></div></div>
+    <div class="card stat" onclick="go('support')"><div class="stat-ic" style="background:#f5f3ff;color:#7c3aed"><span class="ico">🔧</span></div><div><div class="stat-v">1</div><div class="stat-l">Заявка в роботі</div></div></div>
+  </div>
+  <div style="margin-bottom:16px">
+    <button onclick="openEmergencyModal()" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px 16px;background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;border:none;border-radius:var(--r-l);font-size:14px;font-weight:700;text-align:left;box-shadow:0 2px 12px rgba(220,38,38,.25)">
+      <div style="width:44px;height:44px;background:rgba(255,255,255,.15);border-radius:var(--r-m);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0"><span class="ico">📞</span></div>
+      <div style="flex:1"><div>Екстрений виклик</div><div style="font-size:12px;font-weight:500;color:rgba(255,255,255,.8);margin-top:2px">Аварійна служба 24/7 &middot; 044 33 44 799</div></div>
+      <span class="ico"  style="font-size:12px;opacity:.6">›</span>
+    </button>
+  </div>
+  <div class="qa">
+    <div class="qa-item" onclick="openNewTicketModal()"><div class="qa-ic" style="background:#fef2f2;color:#dc2626"><span class="ico">🛠</span></div><span class="qa-label">Заявка</span></div>
+    <div class="qa-item" onclick="go('keys')"><div class="qa-ic" style="background:#eff8ff;color:#2563eb"><span class="ico">🔑</span></div><span class="qa-label">Ключі</span></div>
+    <div class="qa-item" onclick="openMeterModal()"><div class="qa-ic" style="background:#ecfdf5;color:#059669"><span class="ico">⏱</span></div><span class="qa-label">Лічильники</span></div>
+    <div class="qa-item" onclick="go('cars')"><div class="qa-ic" style="background:#f5f3ff;color:#7c3aed"><span class="ico">🚗</span></div><span class="qa-label">Авто</span></div>
+  </div>
+  <div class="sec">
+    <div class="sec-h"><span class="sec-t">Активне опитування</span><a class="sec-link" onclick="go('polls')">Всі <span class="ico"  style="font-size:10px">›</span></a></div>
+    <div class="card">
+      <div class="poll">
+        <div class="poll-top"><div class="poll-ic"><span class="ico">📊</span></div><div><div class="poll-title">Вибір підрядника для ремонту даху</div><div class="poll-meta">До 15 квітня &middot; 47 з 120 мешканців</div></div></div>
+        <div class="poll-bar"><div class="poll-fill" style="width:39%"></div></div>
+        <button class="btn-pri" onclick="openVoteModal('Вибір підрядника для ремонту даху',['БудМонтаж-Про (580 000 ₴)','ДахСервіс Груп (620 000 ₴)','РемБуд ЛТД (495 000 ₴)','Утриматися'])"><span class="ico">✓</span> Проголосувати</button>
+      </div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sec-h"><span class="sec-t">Останні новини</span><a class="sec-link" onclick="go('messages')">Всі <span class="ico"  style="font-size:10px">›</span></a></div>
+    <div class="card">
+      <div class="li" onclick="openMsgModal('Отримано новий інвойс','Утримання будинку — квітень 2026, 1 250,00 ₴. Оплатіть до 20.05.2026 через розділ Інвойси або кнопку Оплатити на головній сторінці.','7 квітня 2026')"><div class="li-ic" style="background:#fef2f2;color:#dc2626"><span class="ico">📄</span></div><div class="li-body"><div class="li-title">Отримано новий інвойс</div><div class="li-desc">Утримання будинку — квітень 2026, 1 250,00 ₴</div><div class="li-time">7 квітня 2026</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+      <div class="li" onclick="openMsgModal('Планове відключення гарячої води','12-14 квітня, 09:00-18:00. Корпуси 3, 4, 5. У зв\\'язку з плановими ремонтними роботами на тепломережі буде відключено гарячу воду. Просимо запастися водою.','5 квітня 2026')"><div class="li-ic" style="background:#fff7ed;color:#ea580c"><span class="ico">💧</span></div><div class="li-body"><div class="li-title">Планове відключення гарячої води</div><div class="li-desc">12-14 квітня, 09:00-18:00. Корпуси 3, 4, 5</div><div class="li-time">5 квітня 2026</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+      <div class="li" onclick="openMsgModal('Протокол загальних зборів від 01.04','Затверджено кошторис на 2026/2027 рік. Протокол доступний у розділі Документи. Основні рішення: затвердження кошторису, обрання ревізійної комісії, ремонт даху.','3 квітня 2026')"><div class="li-ic" style="background:#eff8ff;color:#2563eb"><span class="ico">📃</span></div><div class="li-body"><div class="li-title">Протокол загальних зборів від 01.04</div><div class="li-desc">Затверджено кошторис на 2026/2027 рік</div><div class="li-time">3 квітня 2026</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+      <div class="li" onclick="openMsgModal('Заявку #4521 виконано','Ваша заявка на ремонт домофону виконана. Будь ласка, оцініть якість роботи у розділі Підтримка.','1 квітня 2026')"><div class="li-ic" style="background:#ecfdf5;color:#059669"><span class="ico">✓</span></div><div class="li-body"><div class="li-title">Заявку #4521 виконано</div><div class="li-desc">Ремонт домофону — завершено</div><div class="li-time">1 квітня 2026</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+      <div class="li" onclick="openMsgModal('Нове опитування','Встановлення шлагбауму на в\\'їзд до паркінгу. Голосування відкрите до 10.04.2026. Проголосуйте у розділі Опитування.','30 березня 2026')"><div class="li-ic" style="background:#f5f3ff;color:#7c3aed"><span class="ico">📊</span></div><div class="li-body"><div class="li-title">Нове опитування</div><div class="li-desc">Встановлення шлагбауму — голосуйте до 10.04</div><div class="li-time">30 березня 2026</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: Invoices -->
+<div class="page" id="p-invoices">
+  <div class="greet"><h1>Інвойси</h1><p>Ваші рахунки та платежі</p></div>
+  <div class="tabs"><button class="tab active">Неоплачені (3)</button><button class="tab">Оплачені</button><button class="tab">Всі</button></div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="inv" onclick="openInvoiceModal('Утримання будинку — березень','INV-2026-0312','1 250,00 ₴','Утримання будинку, прибирання, освітлення, ліфт, охорона','Прострочено','#dc2626')"><div class="inv-ic" style="background:#fef2f2;color:#dc2626"><span class="ico">📄</span></div><div class="inv-body"><div class="inv-title">Утримання будинку — березень</div><div class="inv-desc">Рахунок #INV-2026-0312</div></div><div class="inv-right"><div class="inv-amount">1 250,00 ₴</div><div class="inv-status red">Прострочено</div><button class="btn-sm" onclick="event.stopPropagation();openPaymentModal('1 250,00 ₴')">Оплатити</button></div></div>
+    <div class="inv" onclick="openInvoiceModal('Паркомісце — квітень','INV-2026-0401','800,00 ₴','Оренда паркомісця B-47','До 20.04','#ea580c')"><div class="inv-ic" style="background:#fff7ed;color:#ea580c"><span class="ico">📄</span></div><div class="inv-body"><div class="inv-title">Паркомісце — квітень</div><div class="inv-desc">Рахунок #INV-2026-0401</div></div><div class="inv-right"><div class="inv-amount">800,00 ₴</div><div class="inv-status yellow">До 20.04</div><button class="btn-sm" onclick="event.stopPropagation();openPaymentModal('800,00 ₴')">Оплатити</button></div></div>
+    <div class="inv" onclick="openInvoiceModal('Вивіз сміття — квітень','INV-2026-0402','220,00 ₴','Послуги вивозу побутових відходів','До 25.04','#ea580c')"><div class="inv-ic" style="background:#fff7ed;color:#ea580c"><span class="ico">📄</span></div><div class="inv-body"><div class="inv-title">Вивіз сміття — квітень</div><div class="inv-desc">Рахунок #INV-2026-0402</div></div><div class="inv-right"><div class="inv-amount">220,00 ₴</div><div class="inv-status yellow">До 25.04</div><button class="btn-sm" onclick="event.stopPropagation();openPaymentModal('220,00 ₴')">Оплатити</button></div></div>
+  </div>
+  <button class="btn-pri" onclick="openPaymentModal('2 270,00 ₴')"><span class="ico">💳</span> Оплатити все — 2 270,00 ₴</button>
+</div>
+
+<!-- PAGE: Wallet -->
+<div class="page" id="p-wallet">
+  <div class="greet"><h1>Гаманець</h1><p>Ваші платіжні методи</p></div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="inv" onclick="showToast('Основна картка: Visa 4582, Приватбанк')"><div class="inv-ic" style="background:#eff8ff;color:#2563eb"><span class="ico">💳</span></div><div class="inv-body"><div class="inv-title">Visa &bull;&bull;&bull;&bull; 4582</div><div class="inv-desc">Приватбанк &middot; Діє до 08/27</div></div><div style="flex-shrink:0"><span style="font-size:11px;font-weight:600;background:#ecfdf5;color:#059669;padding:3px 8px;border-radius:6px">Основна</span></div></div>
+    <div class="inv" onclick="showToast('Картка: Mastercard 7891, Monobank')"><div class="inv-ic" style="background:#fff7ed;color:#ea580c"><span class="ico">💳</span></div><div class="inv-body"><div class="inv-title">Mastercard &bull;&bull;&bull;&bull; 7891</div><div class="inv-desc">Monobank &middot; Діє до 12/26</div></div><div class="inv-right"></div></div>
+  </div>
+  <button class="btn-pri" onclick="openAddCardModal()"><span class="ico">＋</span> Додати картку</button>
+</div>
+
+<!-- PAGE: Reports -->
+<div class="page" id="p-reports">
+  <div class="greet"><h1>Мої нарахування</h1><p>Історія та деталі платежів</p></div>
+
+  <div class="month-picker">
+    <button class="mp-btn" id="mpPrev" onclick="changeMonth(-1)"><span class="ico">‹</span></button>
+    <div class="mp-label" id="mpLabel">Березень 2026<div class="mp-sub">Поточний місяць</div></div>
+    <button class="mp-btn" id="mpNext" onclick="changeMonth(1)" disabled><span class="ico">›</span></button>
+  </div>
+
+  <div id="rpt-content">
+    <div class="card" style="margin-bottom:12px">
+      <div class="rpt-row"><span class="rpt-label">Утримання будинку</span><span class="rpt-val">850,00 ₴</span></div>
+      <div class="rpt-row"><span class="rpt-label">Прибирання території</span><span class="rpt-val">120,00 ₴</span></div>
+      <div class="rpt-row"><span class="rpt-label">Освітлення місць загального користування</span><span class="rpt-val">85,00 ₴</span></div>
+      <div class="rpt-row"><span class="rpt-label">Обслуговування ліфта</span><span class="rpt-val">95,00 ₴</span></div>
+      <div class="rpt-row"><span class="rpt-label">Охорона</span><span class="rpt-val">100,00 ₴</span></div>
+      <div class="rpt-row" style="background:#f8fafc;font-weight:700"><span class="rpt-label" style="font-weight:700;color:var(--txt)">Разом</span><span class="rpt-val" style="font-size:16px;color:var(--err)">1 250,00 ₴</span></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <div class="card" style="flex:1;padding:14px;text-align:center">
+        <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">Статус</div>
+        <div style="font-size:13px;font-weight:700;color:var(--err)"><span class="ico">⚠</span> Не оплачено</div>
+      </div>
+      <div class="card" style="flex:1;padding:14px;text-align:center">
+        <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">Оплатити до</div>
+        <div style="font-size:13px;font-weight:700">09.04.2026</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: Property -->
+<div class="page" id="p-property">
+  <div class="greet"><h1>Моя нерухомість</h1><p>Квартири та приміщення</p></div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="prop" style="cursor:pointer" onclick="showToast('Обрано кв. 298')"><div class="prop-ic"><span class="ico">🏢</span></div><div><div class="prop-title">Кв. 298</div><div class="prop-sub">ЖК «Paradise Avenue» &middot; вул. Панорамна 2 &middot; 72.4 м² &middot; 2 кімнати</div></div></div>
+    <div class="prop" style="border-top:1px solid var(--border-l);cursor:pointer" onclick="showToast('Обрано кв. 452')"><div class="prop-ic" style="background:linear-gradient(135deg,#dcfce7,#f0fdf4);color:#16a34a"><span class="ico">🏢</span></div><div><div class="prop-title">Кв. 452</div><div class="prop-sub">ЖК «Paradise Avenue» &middot; вул. Панорамна 2 &middot; 55.8 м² &middot; 1 кімната</div></div></div>
+  </div>
+  <div class="sec"><div class="sec-h"><span class="sec-t">Дані квартири — кв. 298</span></div></div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="pf" onclick="showToast('Адреса скопійована')"><div><div class="pf-label">Адреса</div><div class="pf-value">вул. Панорамна 2, кв. 298</div></div></div>
+    <div class="pf" onclick="showToast('Поверх 12 з 25')"><div><div class="pf-label">Поверх</div><div class="pf-value">12 з 25</div></div></div>
+    <div class="pf" onclick="showToast('Площа: 72.4 / 48.6 м²')"><div><div class="pf-label">Площа загальна / житлова</div><div class="pf-value">72.4 / 48.6 м²</div></div></div>
+    <div class="pf" onclick="showToast('Мешканців: 3')"><div><div class="pf-label">Кількість мешканців</div><div class="pf-value">3</div></div></div>
+    <div class="pf" onclick="openMeterModal()"><div><div class="pf-label">Лічильник холодної води</div><div class="pf-value">00458712 &middot; 124.5 м³</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+    <div class="pf" onclick="openMeterModal()"><div><div class="pf-label">Лічильник гарячої води</div><div class="pf-value">00458713 &middot; 67.2 м³</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+    <div class="pf" onclick="openMeterModal()"><div><div class="pf-label">Лічильник електрики</div><div class="pf-value">UA0091234 &middot; 3 412 кВт·год</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+  </div>
+  <button class="btn-pri" style="margin-bottom:16px" onclick="openMeterModal()"><span class="ico">⏱</span> Подати показники лічильників</button>
+  <div class="sec"><div class="sec-h"><span class="sec-t">Баланс по квартирі</span></div></div>
+  <div class="card">
+    <div class="rpt-row" onclick="go('invoices')"><span class="rpt-label">Борг станом на 07.04.2026</span><span class="rpt-val" style="color:var(--err)">-1 250,00 ₴</span></div>
+    <div class="rpt-row"><span class="rpt-label">Переплата (попередні місяці)</span><span class="rpt-val" style="color:var(--suc)">0,00 ₴</span></div>
+  </div>
+</div>
+
+<!-- PAGE: Cars -->
+<div class="page" id="p-cars">
+  <div class="greet"><h1>Автопарк</h1><p>Ваші транспортні засоби</p></div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="car" onclick="openCarModal('Toyota Camry 2021','Сірий','2021','АА 1234 ВВ','B-47')"><div class="car-ic" style="background:#eff8ff;color:#2563eb"><span class="ico">🚗</span></div><div class="inv-body"><div class="inv-title">Toyota Camry 2021</div><div class="inv-desc">Сірий &middot; Паркомісце B-47</div><div class="car-plate">АА 1234 ВВ</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+    <div class="car" onclick="openCarModal('Yamaha MT-07 2023','Чорний','2023','АА 5678 СС','Без паркомісця')"><div class="car-ic" style="background:#f5f3ff;color:#7c3aed"><span class="ico">🏍</span></div><div class="inv-body"><div class="inv-title">Yamaha MT-07 2023</div><div class="inv-desc">Чорний &middot; Без паркомісця</div><div class="car-plate">АА 5678 СС</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+  </div>
+  <button class="btn-pri" onclick="openAddVehicleModal()"><span class="ico">＋</span> Додати транспортний засіб</button>
+</div>
+
+<!-- PAGE: Keys & Passes -->
+<div class="page" id="p-keys">
+  <div class="greet"><h1>Ключі та доступ</h1><p>Ключі СКД, перепустки, доступ</p></div>
+  <div class="tabs" id="keysTabs"><button class="tab active" onclick="showKeysTab('keys')">Мої ключі (3)</button><button class="tab" onclick="showKeysTab('passes')">Перепустки (4)</button></div>
+  <div id="keys-keys">
+    <div class="card" style="margin-bottom:12px">
+      <div class="key" onclick="openKeyModal('Брелок #001247','Парадне + ліфт + паркінг','Активний')"><div class="key-ic" style="background:#ecfdf5;color:#059669"><span class="ico">🔑</span></div><div class="inv-body"><div class="inv-title">Брелок #001247</div><div class="inv-desc">Парадне + ліфт + паркінг</div></div><span class="key-status active">Активний</span></div>
+      <div class="key" onclick="openKeyModal('Брелок #001248','Парадне + ліфт (дружина)','Активний')"><div class="key-ic" style="background:#ecfdf5;color:#059669"><span class="ico">🔑</span></div><div class="inv-body"><div class="inv-title">Брелок #001248</div><div class="inv-desc">Парадне + ліфт (дружина)</div></div><span class="key-status active">Активний</span></div>
+      <div class="key" onclick="openKeyModal('Брелок #001102','Загублений — заблоковано 12.01.2026','Заблоковано')"><div class="key-ic" style="background:#fef2f2;color:#dc2626"><span class="ico">🔑</span></div><div class="inv-body"><div class="inv-title">Брелок #001102</div><div class="inv-desc">Загублений — заблоковано 12.01.2026</div></div><span class="key-status blocked">Заблоковано</span></div>
+    </div>
+    <button class="btn-pri" onclick="openOrderKeyModal()"><span class="ico">＋</span> Замовити новий ключ — 250 ₴</button>
+  </div>
+  <div id="keys-passes" style="display:none">
+    <div class="card" style="margin-bottom:12px">
+      <div class="pass" onclick="openPassModal('Кондратьєв А.В.','Постійна','Мешканець, кв. 298, видана 15.01.2024','Активна')"><div class="pass-ic" style="background:#ecfdf5;color:#059669"><span class="ico">🪪</span></div><div class="inv-body"><div class="inv-title">Постійна перепустка — Кондратьєв А.В.</div><div class="inv-desc">Мешканець &middot; кв. 298 &middot; Видана 15.01.2024</div></div><span class="pass-status active">Активна</span></div>
+      <div class="pass" onclick="openPassModal('Кондратьєва О.М.','Постійна','Мешканець, кв. 298, видана 15.01.2024','Активна')"><div class="pass-ic" style="background:#ecfdf5;color:#059669"><span class="ico">🪪</span></div><div class="inv-body"><div class="inv-title">Постійна перепустка — Кондратьєва О.М.</div><div class="inv-desc">Мешканець &middot; кв. 298 &middot; Видана 15.01.2024</div></div><span class="pass-status active">Активна</span></div>
+      <div class="pass" onclick="openPassModal('Петренко І.С.','Гостьова разова','10.04.2026, 10:00-18:00','Очікує')"><div class="pass-ic" style="background:#fff7ed;color:#ea580c"><span class="ico">🪪</span></div><div class="inv-body"><div class="inv-title">Гостьова перепустка — Петренко І.С.</div><div class="inv-desc">Разова &middot; 10.04.2026, 10:00-18:00</div></div><span class="pass-status pending">Очікує</span></div>
+      <div class="pass" onclick="openPassModal('Сидоренко В.П.','Гостьова разова','02.04.2026, термін вийшов','Закінчена')"><div class="pass-ic" style="background:#fef2f2;color:#dc2626"><span class="ico">✕</span></div><div class="inv-body"><div class="inv-title">Гостьова перепустка — Сидоренко В.П.</div><div class="inv-desc">Разова &middot; 02.04.2026 &middot; Термін вийшов</div></div><span class="pass-status expired">Закінчена</span></div>
+    </div>
+    <button class="btn-pri" onclick="openNewPassModal()"><span class="ico">＋</span> Оформити перепустку</button>
+  </div>
+</div>
+
+<!-- PAGE: Messages -->
+<div class="page" id="p-messages">
+  <div class="greet"><h1>Повідомлення</h1><p>Від управителя та системні</p></div>
+  <div class="tabs"><button class="tab active">Вхідні (5)</button><button class="tab">Прочитані</button></div>
+  <div class="card">
+    <div class="msg unread" onclick="openMsgModal('Планове відключення гарячої води','12-14 квітня, 09:00-18:00. Корпуси 3, 4, 5. У зв\\'язку з плановими ремонтними роботами на тепломережі буде відключено гарячу воду. Просимо запастися водою заздалегідь. Вибачаємось за тимчасові незручності.','5 квітня 2026, 14:30')"><div class="msg-dot"></div><div class="li-body"><div class="li-title">Планове відключення гарячої води</div><div class="li-desc">12-14 квітня, 09:00-18:00. Корпуси 3, 4, 5. Просимо запастися водою.</div><div class="li-time">5 квітня 2026, 14:30</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+    <div class="msg unread" onclick="openMsgModal('Нагадування: оплата за березень','Шановний мешканцю, нагадуємо про необхідність оплати рахунку за березень 2026 на суму 1 250,00 грн. Термін оплати — до 09.04.2026. Оплатити можна через розділ Інвойси.','4 квітня 2026, 10:00')"><div class="msg-dot"></div><div class="li-body"><div class="li-title">Нагадування: оплата за березень</div><div class="li-desc">Шановний мешканцю, нагадуємо про необхідність оплати рахунку за березень 2026.</div><div class="li-time">4 квітня 2026, 10:00</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+    <div class="msg unread" onclick="openMsgModal('Протокол зборів доступний','Протокол загальних зборів від 01.04.2026 завантажено у розділ Документи. Основні рішення: затвердження кошторису на 2026/2027 рік, обрання ревізійної комісії, погодження ремонту даху.','3 квітня 2026, 16:45')"><div class="msg-dot"></div><div class="li-body"><div class="li-title">Протокол зборів доступний</div><div class="li-desc">Протокол загальних зборів від 01.04.2026 завантажено у розділ «Документи».</div><div class="li-time">3 квітня 2026, 16:45</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+    <div class="msg" onclick="openMsgModal('Заявку #4521 виконано','Ваша заявка на ремонт домофону виконана. Будь ласка, оцініть якість роботи у розділі Підтримка. Якщо проблема повторюється — створіть нову заявку.','1 квітня 2026, 11:20')"><div class="msg-dot read"></div><div class="li-body"><div class="li-title">Заявку #4521 виконано</div><div class="li-desc">Ваша заявка на ремонт домофону виконана. Будь ласка, оцініть якість.</div><div class="li-time">1 квітня 2026, 11:20</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+    <div class="msg" onclick="openMsgModal('Весняне прибирання території','29-30 березня буде проведено весняне прибирання двору та дитячого майданчику. Просимо прибрати з двору особисті речі. Дякуємо за розуміння!','27 березня 2026, 09:15')"><div class="msg-dot read"></div><div class="li-body"><div class="li-title">Весняне прибирання території</div><div class="li-desc">29-30 березня буде проведено весняне прибирання двору та дитячого майданчику.</div><div class="li-time">27 березня 2026, 09:15</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+  </div>
+</div>
+
+<!-- PAGE: Documents -->
+<div class="page" id="p-docs">
+  <div class="greet"><h1>Документи</h1><p>Акти, протоколи, договори</p></div>
+  <div class="tabs"><button class="tab active">Всі</button><button class="tab">Нові (2)</button><button class="tab">Договори</button><button class="tab">Протоколи</button></div>
+  <div class="card">
+    <div class="doc" onclick="openDocModal('Протокол зборів 01.04.2026','PDF','1.2 МБ','3 квітня 2026')"><div class="doc-ic" style="background:#fef2f2;color:#dc2626"><span class="ico">📕</span></div><div class="inv-body"><div class="inv-title">Протокол зборів 01.04.2026</div><div class="inv-desc">PDF &middot; 1.2 МБ &middot; 3 квітня 2026</div></div><span style="font-size:11px;font-weight:600;background:#eff8ff;color:#2563eb;padding:2px 8px;border-radius:6px">Нове</span></div>
+    <div class="doc" onclick="openDocModal('Кошторис на 2026/2027','PDF','3.4 МБ','3 квітня 2026')"><div class="doc-ic" style="background:#fef2f2;color:#dc2626"><span class="ico">📕</span></div><div class="inv-body"><div class="inv-title">Кошторис на 2026/2027</div><div class="inv-desc">PDF &middot; 3.4 МБ &middot; 3 квітня 2026</div></div><span style="font-size:11px;font-weight:600;background:#eff8ff;color:#2563eb;padding:2px 8px;border-radius:6px">Нове</span></div>
+    <div class="doc" onclick="openDocModal('Договір з КП «Водоканал»','PDF','890 КБ','15 лютого 2026')"><div class="doc-ic" style="background:#fff7ed;color:#ea580c"><span class="ico">📝</span></div><div class="inv-body"><div class="inv-title">Договір з КП «Водоканал»</div><div class="inv-desc">PDF &middot; 890 КБ &middot; 15 лютого 2026</div></div></div>
+    <div class="doc" onclick="openDocModal('Акт виконаних робіт — січень','PDF','620 КБ','5 лютого 2026')"><div class="doc-ic" style="background:#fef2f2;color:#dc2626"><span class="ico">📕</span></div><div class="inv-body"><div class="inv-title">Акт виконаних робіт — січень</div><div class="inv-desc">PDF &middot; 620 КБ &middot; 5 лютого 2026</div></div></div>
+    <div class="doc" onclick="openDocModal('Звіт управителя за 2025','XLSX','2.1 МБ','20 січня 2026')"><div class="doc-ic" style="background:#ecfdf5;color:#059669"><span class="ico">📗</span></div><div class="inv-body"><div class="inv-title">Звіт управителя за 2025</div><div class="inv-desc">XLSX &middot; 2.1 МБ &middot; 20 січня 2026</div></div></div>
+  </div>
+</div>
+
+<!-- PAGE: Polls -->
+<div class="page" id="p-polls">
+  <div class="greet"><h1>Опитування</h1><p>Голосування мешканців</p></div>
+  <div class="tabs"><button class="tab active">Активні (2)</button><button class="tab">Завершені</button></div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="poll">
+      <div class="poll-top"><div class="poll-ic"><span class="ico">📊</span></div><div><div class="poll-title">Вибір підрядника для ремонту даху</div><div class="poll-meta">До 15 квітня &middot; 47/120 голосів</div></div></div>
+      <div class="poll-bar"><div class="poll-fill" style="width:39%"></div></div>
+      <button class="btn-pri" onclick="openVoteModal('Вибір підрядника для ремонту даху',['БудМонтаж-Про (580 000 ₴)','ДахСервіс Груп (620 000 ₴)','РемБуд ЛТД (495 000 ₴)','Утриматися'])"><span class="ico">✓</span> Проголосувати</button>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="poll">
+      <div class="poll-top"><div class="poll-ic" style="background:#ecfdf5;color:#059669"><span class="ico">📊</span></div><div><div class="poll-title">Озеленення двору: які дерева садити?</div><div class="poll-meta">До 20 квітня &middot; 23/120 голосів</div></div></div>
+      <div class="poll-bar"><div class="poll-fill" style="width:19%;background:linear-gradient(90deg,#059669,#34d399)"></div></div>
+      <button class="btn-pri" onclick="openVoteModal('Озеленення двору: які дерева садити?',['Клени та липи','Каштани','Декоративні хвойні','Фруктові дерева','Утриматися'])"><span class="ico">✓</span> Проголосувати</button>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-h"><span class="sec-t">Завершені</span></div></div>
+  <div class="card">
+    <div class="poll">
+      <div class="poll-top"><div class="poll-ic" style="background:var(--border-l);color:var(--txt3)"><span class="ico">📊</span></div><div><div class="poll-title">Встановлення відеоспостереження</div><div class="poll-meta">Завершено 20 березня &middot; 98/120 голосів</div></div></div>
+      <div class="poll-bar"><div class="poll-fill" style="width:82%;background:#d0d5dd"></div></div>
+      <div style="font-size:13px;color:var(--suc);font-weight:600"><span class="ico">✓</span> Рішення прийнято: встановити до літа 2026</div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: Support -->
+<div class="page" id="p-support">
+  <div class="greet"><h1>Підтримка</h1><p>Ваші заявки та звернення</p></div>
+  <div class="tabs" id="supportTabs"><button class="tab active" onclick="showSupportTab('active')">Активні (2)</button><button class="tab" onclick="showSupportTab('done')">Завершені (8)</button><button class="tab" onclick="showSupportTab('all')">Всі (10)</button></div>
+  <div id="support-active">
+    <div class="card" style="margin-bottom:12px">
+      <div class="tkt" onclick="openTicketModal('#4589','Не працює освітлення на сходовій клітці (12 поверх)','Лампа на 12 поверсі не працює вже 3 дні. Потрібна заміна. Темно на сходах, небезпечно для мешканців.','В роботі','6 квітня 2026')"><span class="tkt-status progress"></span><div class="tkt-body"><div class="tkt-id">#4589</div><div class="tkt-title">Не працює освітлення на сходовій клітці (12 поверх)</div><div class="tkt-meta">В роботі &middot; Створено 6 квітня</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+      <div class="tkt" onclick="openTicketModal('#4592','Шум від вентиляції у підвалі','Вібрація та гул від вентиляційної системи чутно на 1-3 поверхах. Особливо вночі. Просимо перевірити кріплення.','Очікує розгляду','7 квітня 2026')"><span class="tkt-status open"></span><div class="tkt-body"><div class="tkt-id">#4592</div><div class="tkt-title">Шум від вентиляції у підвалі</div><div class="tkt-meta">Очікує розгляду &middot; Створено 7 квітня</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+    </div>
+  </div>
+  <div id="support-done" style="display:none">
+    <div class="card" style="margin-bottom:12px">
+      <div class="tkt" onclick="openTicketModal('#4521','Ремонт домофону','Домофон не працював 2 дні. Майстер замінив плату. Все працює.','Виконано','1 квітня 2026')"><span class="tkt-status done"></span><div class="tkt-body"><div class="tkt-id">#4521</div><div class="tkt-title">Ремонт домофону</div><div class="tkt-meta">Виконано 1 квітня</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+      <div class="tkt" onclick="openTicketModal('#4498','Засмічення каналізації (кв. 298)','Повільний злив у ванній. Прочищено стояк. Проблему усунуто.','Виконано','18 березня 2026')"><span class="tkt-status done"></span><div class="tkt-body"><div class="tkt-id">#4498</div><div class="tkt-title">Засмічення каналізації (кв. 298)</div><div class="tkt-meta">Виконано 18 березня</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+      <div class="tkt" onclick="openTicketModal('#4467','Заміна лампочки у парадному','Перегоріла лампа на вході до під\\'їзду. Замінено на LED.','Виконано','5 березня 2026')"><span class="tkt-status done"></span><div class="tkt-body"><div class="tkt-id">#4467</div><div class="tkt-title">Заміна лампочки у парадному</div><div class="tkt-meta">Виконано 5 березня</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+      <div class="tkt" onclick="openTicketModal('#4431','Тече кран у підвалі (стояк ХВ)','Виявлено протікання на стояку ХВ. Замінено запірну арматуру.','Виконано','22 лютого 2026')"><span class="tkt-status done"></span><div class="tkt-body"><div class="tkt-id">#4431</div><div class="tkt-title">Тече кран у підвалі (стояк ХВ)</div><div class="tkt-meta">Виконано 22 лютого</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+      <div class="tkt" onclick="openTicketModal('#4415','Не працює ліфт (корпус 4)','Ліфт зупинився на 8 поверсі. Викликано спеціалістів. Відновлено роботу.','Виконано','15 лютого 2026')"><span class="tkt-status done"></span><div class="tkt-body"><div class="tkt-id">#4415</div><div class="tkt-title">Не працює ліфт (корпус 4)</div><div class="tkt-meta">Виконано 15 лютого</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+    </div>
+    <div class="pagination">
+      <button class="pg-btn" disabled><span class="ico"  style="font-size:11px">‹</span></button>
+      <button class="pg-btn active">1</button>
+      <button class="pg-btn" onclick="showToast('Сторінка 2')">2</button>
+      <button class="pg-btn" onclick="showToast('Сторінка 2')"><span class="ico"  style="font-size:11px">›</span></button>
+    </div>
+    <div class="pg-info">Показано 1-5 з 8 заявок</div>
+  </div>
+  <div id="support-all" style="display:none">
+    <div class="card" style="margin-bottom:12px">
+      <div class="tkt" onclick="openTicketModal('#4589','Не працює освітлення','Лампа на 12 поверсі','В роботі','6 квітня')"><span class="tkt-status progress"></span><div class="tkt-body"><div class="tkt-id">#4589</div><div class="tkt-title">Не працює освітлення на сходовій клітці</div><div class="tkt-meta">В роботі &middot; 6 квітня</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+      <div class="tkt" onclick="openTicketModal('#4592','Шум від вентиляції','Вібрація у підвалі','Очікує','7 квітня')"><span class="tkt-status open"></span><div class="tkt-body"><div class="tkt-id">#4592</div><div class="tkt-title">Шум від вентиляції у підвалі</div><div class="tkt-meta">Очікує &middot; 7 квітня</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+      <div class="tkt" onclick="openTicketModal('#4521','Ремонт домофону','Домофон не працював','Виконано','1 квітня')"><span class="tkt-status done"></span><div class="tkt-body"><div class="tkt-id">#4521</div><div class="tkt-title">Ремонт домофону</div><div class="tkt-meta">Виконано &middot; 1 квітня</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+      <div class="tkt" onclick="openTicketModal('#4498','Засмічення каналізації','Прочищено стояк','Виконано','18 березня')"><span class="tkt-status done"></span><div class="tkt-body"><div class="tkt-id">#4498</div><div class="tkt-title">Засмічення каналізації (кв. 298)</div><div class="tkt-meta">Виконано &middot; 18 березня</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+      <div class="tkt" onclick="openTicketModal('#4467','Заміна лампочки','Перегоріла лампа','Виконано','5 березня')"><span class="tkt-status done"></span><div class="tkt-body"><div class="tkt-id">#4467</div><div class="tkt-title">Заміна лампочки у парадному</div><div class="tkt-meta">Виконано &middot; 5 березня</div></div><div class="li-arr"><span class="ico">›</span></div></div>
+    </div>
+    <div class="pagination">
+      <button class="pg-btn" disabled><span class="ico"  style="font-size:11px">‹</span></button>
+      <button class="pg-btn active">1</button>
+      <button class="pg-btn" onclick="showToast('Сторінка 2')">2</button>
+      <button class="pg-btn" onclick="showToast('Сторінка 2')"><span class="ico"  style="font-size:11px">›</span></button>
+    </div>
+    <div class="pg-info">Показано 1-5 з 10 заявок</div>
+  </div>
+  <button class="fab" onclick="openNewTicketModal()" aria-label="Нова заявка"><span class="ico">＋</span></button>
+</div>
+
+<!-- PAGE: Products -->
+<div class="page" id="p-products">
+  <div class="greet"><h1>Програмні продукти</h1><p>Кабінети та сервіси CheckDom</p></div>
+  <div style="text-align:center;padding:16px 0 24px">
+    <div style="font-size:28px;font-weight:800;background:linear-gradient(135deg,#16b7f1,#49c59b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">CheckDom</div>
+    <div style="font-size:13px;color:var(--txt2);margin-top:4px">Платформа управління ОСББ та ЖК</div>
+  </div>
+  <div class="sec"><div class="sec-h"><span class="sec-t">Ваші кабінети</span></div></div>
+  <div class="card" style="margin-bottom:16px">
+    <div style="padding:16px;display:flex;gap:14px;align-items:center;cursor:pointer" onclick="go('home')">
+      <div style="width:52px;height:52px;border-radius:var(--r-l);background:linear-gradient(135deg,#dbeafe,#eff6ff);color:#2563eb;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0"><span class="ico">👤</span></div>
+      <div style="flex:1"><div style="font-size:16px;font-weight:700">Приватний клієнт</div><div style="font-size:13px;color:var(--txt2);margin-top:2px">Особистий кабінет мешканця</div></div>
+      <div style="background:#ecfdf5;color:#059669;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px">Активний</div>
+    </div>
+    <div style="border-top:1px solid var(--border-l);padding:16px;display:flex;gap:14px;align-items:center;cursor:pointer" onclick="showToast('Перехід до кабінету управителя...')">
+      <div style="width:52px;height:52px;border-radius:var(--r-l);background:linear-gradient(135deg,#dcfce7,#f0fdf4);color:#16a34a;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0"><span class="ico">🏢</span></div>
+      <div style="flex:1"><div style="font-size:16px;font-weight:700">Домоуправитель</div><div style="font-size:13px;color:var(--txt2);margin-top:2px">Робочий кабінет управителя ОСББ</div></div>
+      <div style="background:#ecfdf5;color:#059669;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px">Активний</div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-h"><span class="sec-t">Доступні сервіси</span></div></div>
+  <div class="card" style="margin-bottom:16px">
+    <div style="padding:16px;display:flex;gap:14px;align-items:center" onclick="go('invoices')">
+      <div style="width:44px;height:44px;border-radius:var(--r-m);background:#eff6ff;color:#2563eb;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0"><span class="ico">📄</span></div>
+      <div style="flex:1"><div style="font-size:14px;font-weight:600">Платежі та інвойси</div><div style="font-size:12px;color:var(--txt2)">Portmone, LiqPay</div></div>
+      <div style="color:var(--suc);font-size:13px"><span class="ico">✓</span></div>
+    </div>
+    <div style="border-top:1px solid var(--border-l);padding:16px;display:flex;gap:14px;align-items:center" onclick="go('keys')">
+      <div style="width:44px;height:44px;border-radius:var(--r-m);background:#fef3c7;color:#d97706;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0"><span class="ico">🔑</span></div>
+      <div style="flex:1"><div style="font-size:14px;font-weight:600">Система контролю доступу</div><div style="font-size:12px;color:var(--txt2)">Ключі, брелоки, перепустки</div></div>
+      <div style="color:var(--suc);font-size:13px"><span class="ico">✓</span></div>
+    </div>
+    <div style="border-top:1px solid var(--border-l);padding:16px;display:flex;gap:14px;align-items:center" onclick="go('polls')">
+      <div style="width:44px;height:44px;border-radius:var(--r-m);background:#fce7f3;color:#db2777;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0"><span class="ico">📊</span></div>
+      <div style="flex:1"><div style="font-size:14px;font-weight:600">Опитування та голосування</div><div style="font-size:12px;color:var(--txt2)">Цифрові збори мешканців</div></div>
+      <div style="color:var(--suc);font-size:13px"><span class="ico">✓</span></div>
+    </div>
+    <div style="border-top:1px solid var(--border-l);padding:16px;display:flex;gap:14px;align-items:center" onclick="go('docs')">
+      <div style="width:44px;height:44px;border-radius:var(--r-m);background:#f0fdf4;color:#16a34a;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0"><span class="ico">📝</span></div>
+      <div style="flex:1"><div style="font-size:14px;font-weight:600">Електронний документообіг</div><div style="font-size:12px;color:var(--txt2)">Цифровий підпис, протоколи, акти</div></div>
+      <div style="color:var(--suc);font-size:13px"><span class="ico">✓</span></div>
+    </div>
+    <div style="border-top:1px solid var(--border-l);padding:16px;display:flex;gap:14px;align-items:center;opacity:.6" onclick="showToast('Сервіс буде доступний найближчим часом')">
+      <div style="width:44px;height:44px;border-radius:var(--r-m);background:var(--border-l);color:var(--txt3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0"><span class="ico">📖</span></div>
+      <div style="flex:1"><div style="font-size:14px;font-weight:600">Відеоспостереження</div><div style="font-size:12px;color:var(--txt2)">Скоро</div></div>
+      <div style="color:var(--txt3);font-size:11px;font-weight:600;background:var(--border-l);padding:3px 8px;border-radius:6px">Незабаром</div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-h"><span class="sec-t">Інформація</span></div></div>
+  <div class="card">
+    <div style="padding:16px;display:flex;gap:14px;align-items:center;cursor:pointer" onclick="showToast('Відкривається checkdom.in.ua...')">
+      <div style="width:44px;height:44px;border-radius:var(--r-m);background:#f5f3ff;color:#7c3aed;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0"><span class="ico">📖</span></div>
+      <div style="flex:1"><div style="font-size:14px;font-weight:600">checkdom.in.ua</div><div style="font-size:12px;color:var(--txt2)">Офіційний сайт</div></div>
+      <div class="li-arr"><span class="ico"  style="font-size:11px">↗</span></div>
+    </div>
+    <div style="border-top:1px solid var(--border-l);padding:16px;display:flex;gap:14px;align-items:center">
+      <div style="width:44px;height:44px;border-radius:var(--r-m);background:#fef3c7;color:#d97706;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0"><span class="ico">📞</span></div>
+      <div style="flex:1"><div style="font-size:14px;font-weight:600">044 33 44 787</div><div style="font-size:12px;color:var(--txt2)">Підтримка, Пн-Пт 09:00-18:00</div></div>
+    </div>
+  </div>
+  <div style="text-align:center;padding:24px 0;font-size:12px;color:var(--txt3)">&copy; CheckDom, 2016–2026</div>
+</div>
+
+<!-- PAGE: Help -->
+<div class="page" id="p-help">
+  <div class="greet"><h1>Довідковий центр</h1><p>Часті запитання та допомога</p></div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="faq" role="button" tabindex="0" aria-expanded="false" onclick="this.classList.toggle('open');this.setAttribute('aria-expanded',this.classList.contains('open'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><div class="faq-q">Як оплатити рахунок? <span class="ico"  style="color:var(--txt3);font-size:12px;transition:transform .2s">•</span></div><div class="faq-a">Перейдіть у розділ «Інвойси» — натисніть «Оплатити» біля потрібного рахунку — оберіть спосіб оплати (Portmone або LiqPay) — підтвердіть платіж. Також можна оплатити всі рахунки одразу кнопкою «Оплатити все».</div></div>
+    <div class="faq" role="button" tabindex="0" aria-expanded="false" onclick="this.classList.toggle('open');this.setAttribute('aria-expanded',this.classList.contains('open'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><div class="faq-q">Як подати заявку на ремонт? <span class="ico"  style="color:var(--txt3);font-size:12px;transition:transform .2s">•</span></div><div class="faq-a">Перейдіть у «Підтримка» — натисніть «+» (кнопка внизу екрана) — опишіть проблему, за бажанням прикріпіть фото — відправте. Ви зможете відстежувати статус заявки у реальному часі.</div></div>
+    <div class="faq" role="button" tabindex="0" aria-expanded="false" onclick="this.classList.toggle('open');this.setAttribute('aria-expanded',this.classList.contains('open'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><div class="faq-q">Як замовити додатковий ключ? <span class="ico"  style="color:var(--txt3);font-size:12px;transition:transform .2s">•</span></div><div class="faq-a">Перейдіть у «Ключі та доступ» — «Замовити новий ключ». Вартість — 250 ₴. Ключ буде готовий протягом 3-5 робочих днів. Забрати можна в офісі управителя.</div></div>
+    <div class="faq" role="button" tabindex="0" aria-expanded="false" onclick="this.classList.toggle('open');this.setAttribute('aria-expanded',this.classList.contains('open'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><div class="faq-q">Як передати показники лічильників? <span class="ico"  style="color:var(--txt3);font-size:12px;transition:transform .2s">•</span></div><div class="faq-a">Перейдіть у «Моя нерухомість» — натисніть на лічильник або кнопку «Подати показники» — введіть поточні показники. Дані приймаються з 1 по 5 число кожного місяця.</div></div>
+    <div class="faq" role="button" tabindex="0" aria-expanded="false" onclick="this.classList.toggle('open');this.setAttribute('aria-expanded',this.classList.contains('open'))" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}"><div class="faq-q">Контакти управителя <span class="ico"  style="color:var(--txt3);font-size:12px;transition:transform .2s">•</span></div><div class="faq-a">Телефон: 044 33 44 787 (Пн-Пт, 09:00-18:00)<br>Email: support@checkdom.in.ua<br>Офіс: вул. Паркова 15, корп. 1, приміщення 3 (1 поверх)<br>Графік прийому: Вт, Чт 10:00-16:00</div></div>
+  </div>
+</div>
+
+<!-- PAGE: Profile -->
+<div class="page" id="p-profile">
+  <div class="greet"><h1>Мій профіль</h1><p>Особисті дані та налаштування</p></div>
+  <div style="text-align:center;padding:20px 0">
+    <div style="width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,#16b7f1,#49c59b);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:26px;font-weight:700">АК</div>
+    <div style="margin-top:8px;font-size:18px;font-weight:700">Андрій Кондратьєв</div>
+    <div style="font-size:13px;color:var(--txt2)">Верифіковано <span class="ico"  style="color:var(--pri)">✓</span></div>
+  </div>
+  <div class="sec"><div class="sec-h"><span class="sec-t">Особисті дані</span><button class="pf-edit" onclick="openEditProfileModal()">Редагувати</button></div></div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="pf" onclick="showToast('ПІБ скопійовано')"><div><div class="pf-label">ПІБ</div><div class="pf-value">Кондратьєв Андрій Володимирович</div></div></div>
+    <div class="pf" onclick="showToast('5 грудня 1993')"><div><div class="pf-label">Дата народження</div><div class="pf-value">5 грудня 1993</div></div></div>
+    <div class="pf" onclick="showToast('Номер скопійовано')"><div><div class="pf-label">Телефон</div><div class="pf-value">+380 (95) 923 33 93</div></div></div>
+    <div class="pf" onclick="showToast('Email скопійовано')"><div><div class="pf-label">Email</div><div class="pf-value">andrey.kondratiev@yahoo.com</div></div></div>
+    <div class="pf"><div><div class="pf-label">CIF</div><div class="pf-value">0000034211</div></div></div>
+  </div>
+  <div class="sec"><div class="sec-h"><span class="sec-t">Документи</span></div></div>
+  <div class="card">
+    <div class="pf"><div><div class="pf-label">ID-картка</div><div class="pf-value">002837013</div></div></div>
+    <div class="pf"><div><div class="pf-label">ІПН</div><div class="pf-value">••••••0959</div></div></div>
+  </div>
+</div>
+
+<!-- PAGE: Settings -->
+<div class="page" id="p-settings">
+  <div class="greet"><h1>Налаштування</h1></div>
+  <div class="sec"><div class="sec-h"><span class="sec-t">Сповіщення</span></div></div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="stg"><div class="stg-left"><span class="ico">🔔</span><span>Push-сповіщення</span></div><button class="toggle on" role="switch" aria-checked="true" onclick="this.classList.toggle('on');this.setAttribute('aria-checked',this.classList.contains('on'))"></button></div>
+    <div class="stg"><div class="stg-left"><span class="ico">✉️</span><span>Email-сповіщення</span></div><button class="toggle on" role="switch" aria-checked="true" onclick="this.classList.toggle('on');this.setAttribute('aria-checked',this.classList.contains('on'))"></button></div>
+    <div class="stg"><div class="stg-left"><span class="ico">🔔</span><span>Нагадування про оплату</span></div><button class="toggle on" role="switch" aria-checked="true" onclick="this.classList.toggle('on');this.setAttribute('aria-checked',this.classList.contains('on'))"></button></div>
+  </div>
+  <div class="sec"><div class="sec-h"><span class="sec-t">Зовнішній вигляд</span></div></div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="stg"><div class="stg-left"><span class="ico">🌙</span><span>Темна тема</span></div><button class="toggle" role="switch" aria-checked="false" onclick="this.classList.toggle('on');this.setAttribute('aria-checked',this.classList.contains('on'))"></button></div>
+    <div class="stg"><div class="stg-left"><span class="ico">🌐</span><span>Мова</span></div><div class="li-arr" onclick="openLanguageModal()" style="cursor:pointer"><span class="ico">›</span></div></div>
+  </div>
+  <div class="sec"><div class="sec-h"><span class="sec-t">Безпека</span></div></div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="stg"><div class="stg-left"><span class="ico">🔒</span><span>Змінити пароль</span></div><div class="li-arr" onclick="openPasswordModal()" style="cursor:pointer"><span class="ico">›</span></div></div>
+    <div class="stg"><div class="stg-left"><span class="ico">🛡</span><span>Двофакторна автентифікація</span></div><button class="toggle" role="switch" aria-checked="false" onclick="this.classList.toggle('on');this.setAttribute('aria-checked',this.classList.contains('on'))"></button></div>
+  </div>
+  <div class="sec"><div class="sec-h"><span class="sec-t">Сховище</span></div></div>
+  <div class="card">
+    <div style="padding:16px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px"><span style="color:var(--txt2)">Використано</span><span style="font-weight:600">24 МБ з 100 МБ</span></div>
+      <div class="poll-bar"><div class="poll-fill" style="width:24%;background:linear-gradient(90deg,var(--pri),#49c59b)"></div></div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- ====== MODAL SYSTEM ====== -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<!-- ====== BOTTOM NAV ====== -->
+<nav class="bottomnav" id="bottomNav" aria-label="Основна навігація" role="navigation">
+  <button class="bn-item active" data-page="home" onclick="go('home')"><span class="ico">🏠</span><span>Головна</span></button>
+  <button class="bn-item" data-page="invoices" onclick="go('invoices')"><span class="ico">💰</span><span>Оплата</span><span class="bn-badge">3</span></button>
+  <button class="bn-item" data-page="messages" onclick="go('messages')"><span class="ico">✉️</span><span>Пошта</span><span class="bn-badge">5</span></button>
+  <button class="bn-item" data-page="support" onclick="go('support')"><span class="ico">🎧</span><span>Підтримка</span></button>
+  <button class="bn-item" onclick="openSB()"><span class="ico">☰</span><span>Меню</span></button>
+</nav>
+
+<!-- FAB -->
+<button class="fab" onclick="openNewTicketModal()" title="Нова заявка"><span class="ico">＋</span></button>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+</div>
+
+<script>
+// === ROUTING ===
+var titles={home:'Головна',invoices:'Оплата',wallet:'Гаманець',reports:'Мої нарахування',property:'Моя нерухомість',cars:'Автопарк',keys:'Ключі та доступ',messages:'Повідомлення',docs:'Документи',polls:'Опитування',support:'Підтримка',help:'Довідковий центр',profile:'Мій профіль',settings:'Налаштування',products:'Програмні продукти'};
+
+function go(page){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+  var el=document.getElementById('p-'+page);
+  if(el)el.classList.add('active');
+  document.getElementById('pageTitle').textContent=titles[page]||page;
+  // sidebar active
+  document.querySelectorAll('.sb-item').forEach(function(s){s.classList.remove('active')});
+  var si=document.querySelector('.sb-item[data-page="'+page+'"]');
+  if(si)si.classList.add('active');
+  // bottom nav active
+  document.querySelectorAll('.bn-item').forEach(function(b){b.classList.remove('active')});
+  var bi=document.querySelector('.bn-item[data-page="'+page+'"]');
+  if(bi)bi.classList.add('active');
+  closeSB();
+  window.scrollTo(0,0);
+  history.pushState(null,null,'#'+page);
+}
+
+// Handle back/forward
+window.addEventListener('popstate',function(){
+  var h=location.hash.replace('#','');
+  if(h&&titles[h])go(h);
+});
+// Init from hash
+(function(){var h=location.hash.replace('#','');if(h&&titles[h])go(h);})();
+
+// === SIDEBAR ===
+function openSB(){document.getElementById('sb').classList.add('open');document.getElementById('sbOverlay').classList.add('show');document.body.style.overflow='hidden'}
+function closeSB(){document.getElementById('sb').classList.remove('open');document.getElementById('sbOverlay').classList.remove('show');document.body.style.overflow=''}
+
+// === USER DROPDOWN ===
+function toggleUD(){document.getElementById('userDrop').classList.toggle('show')}
+function closeUD(){document.getElementById('userDrop').classList.remove('show')}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeUD();closeSB();closeModal()}});
+
+// === MODAL SYSTEM ===
+function openModal(){document.getElementById('modalOverlay').classList.add('show');document.body.style.overflow='hidden'}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('show');document.body.style.overflow=''}
+
+// === TOAST ===
+function showToast(msg){var t=document.getElementById('toast');t.innerHTML='<span class="ico">✓</span> '+msg;t.style.display='flex';requestAnimationFrame(function(){requestAnimationFrame(function(){t.classList.add('show')})});clearTimeout(t._tm);t._tm=setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.style.display='none'},300)},2500)}
+
+// === EMERGENCY MODAL ===
+function openEmergencyModal(){
+  var html='<div class="modal-head"><div class="modal-title">Екстрений виклик</div><button class="modal-close" onclick="closeModal()"><span class="ico">✕</span></button></div>';
+  html+='<div class="modal-body">';
+  html+='<a href="tel:+380443344799" class="emergency-btn"><span class="ico">📞</span> 044 33 44 799</a>';
+  html+='<div class="emergency-info"><strong>Коли потрібно викликати аварійну службу:</strong><ul>';
+  html+='<li>Прорив труб водопостачання або каналізації</li>';
+  html+='<li>Аварійне відключення електроенергії в будинку</li>';
+  html+='<li>Пошкодження газопроводу (запах газу)</li>';
+  html+='<li>Затоплення квартири або підвалу</li>';
+  html+='<li>Пожежа або задимлення в місцях загального користування</li>';
+  html+='<li>Обрив ліфтового тросу або застрягання у ліфті</li>';
+  html+='</ul></div>';
+  html+='<div class="emergency-info"><strong>Умови оформлення та опрацювання:</strong><ul>';
+  html+='<li>Аварійна служба працює цілодобово, 24/7, 365 днів</li>';
+  html+='<li>Час реагування — до 30 хвилин з моменту виклику</li>';
+  html+='<li>При виклику повідомте адресу, характер аварії та контакти</li>';
+  html+='<li>Хибний виклик може бути тарифіковано</li>';
+  html+='<li>При загрозі життю: 101 (пожежна), 103 (швидка), 104 (газ)</li>';
+  html+='</ul></div>';
+  html+='</div>';
+  html+='<div class="modal-foot"><a href="tel:+380443344799" class="btn-pri err">Зателефонувати зараз</a></div>';
+  document.getElementById('modalContent').innerHTML=html;
+  openModal();
+}
+
+// === INVOICE MODAL ===
+function openInvoiceModal(title,num,amount,service,status,color){
+  var html='<div class="modal-head"><div class="modal-title">'+title+'</div><button class="modal-close" onclick="closeModal()"><span class="ico">✕</span></button></div>';
+  html+='<div class="modal-body">';
+  html+='<div class="rpt-row"><span class="rpt-label">Номер рахунку</span><span class="rpt-val">'+num+'</span></div>';
+  html+='<div class="rpt-row"><span class="rpt-label">Послуга</span><span class="rpt-val">'+service+'</span></div>';
+  html+='<div class="rpt-row"><span class="rpt-label">Статус</span><span class="rpt-val" style="color:'+color+'">'+status+'</span></div>';
+  html+='<div style="margin:16px 0;padding:16px;background:#f8fafc;border-radius:var(--r-m)"><div style="font-size:12px;color:var(--txt2);margin-bottom:4px">Сума до оплати</div><div style="font-size:28px;font-weight:800;color:'+color+'">'+amount+'</div></div>';
+  html+='<div style="margin:12px 0"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:8px">Способ оплати:</label>';
+  html+='<button style="width:100%;padding:12px;border:1px solid var(--border);background:var(--white);border-radius:var(--r-m);text-align:left;font-size:13px;margin-bottom:8px;cursor:pointer" onclick="showToast(\'Portmone активовано\')"><span class="ico">💳</span> Portmone</button>';
+  html+='<button style="width:100%;padding:12px;border:1px solid var(--border);background:var(--white);border-radius:var(--r-m);text-align:left;font-size:13px;margin-bottom:8px;cursor:pointer" onclick="showToast(\'LiqPay активовано\')"><span class="ico">💳</span> LiqPay</button>';
+  html+='<button style="width:100%;padding:12px;border:1px solid var(--border);background:var(--white);border-radius:var(--r-m);text-align:left;font-size:13px;cursor:pointer" onclick="showToast(\'Загрузка PDF...\')"><span class="ico">⬇</span> Завантажити PDF</button>';
+  html+='</div>';
+  html+='</div>';
+  html+='<div class="modal-foot"><button class="btn-pri" onclick="showToast(\'Переход до оплати...\');closeModal()">Оплатити '+amount+'</button></div>';
+  document.getElementById('modalContent').innerHTML=html;
+  openModal();
+}
+
+// === PAYMENT MODAL ===
+function openPaymentModal(amount){
+  var html='<div class="modal-head"><div class="modal-title">Підтвердження оплати</div><button class="modal-close" onclick="closeModal()"><span class="ico">✕</span></button></div>';
+  html+='<div class="modal-body">';
+  html+='<div style="text-align:center;margin:20px 0"><div style="font-size:12px;color:var(--txt2);margin-bottom:4px">Сума</div><div style="font-size:36px;font-weight:800;color:var(--pri)">'+amount+'</div></div>';
+  html+='<label style="font-size:12px;font-weight:600;display:block;margin-bottom:8px">Платіжна карта:</label>';
+  html+='<div style="margin-bottom:12px"><input type="radio" id="card1" name="card" checked><label for="card1" style="margin-left:8px;cursor:pointer"><strong>Visa</strong> ****4582</label></div>';
+  html+='<div style="margin-bottom:16px"><input type="radio" id="card2" name="card"><label for="card2" style="margin-left:8px;cursor:pointer"><strong>Mastercard</strong> ****7891</label></div>';
+  html+='</div>';
+  html+='<div class="modal-foot"><button class="btn-pri" onclick="showToast(\'Платіж обробленo...\');closeModal()">Підтвердити</button><button class="btn-sec" onclick="closeModal()">Скасувати</button></div>';
+  document.getElementById('modalContent').innerHTML=html;
+  openModal();
+}
+
+// === ADD CARD MODAL ===
+function openAddCardModal(){
+  var html='<div class="modal-head"><div class="modal-title">Додати карту</div><button class="modal-close" onclick="closeModal()"><span class="ico">✕</span></button></div>';
+  html+='<div class="modal-body">';
+  html+='<div class="form-group"><label>Номер карти</label><input type="text" placeholder="1234 5678 9012 3456" maxlength="19"></div>';
+  html+='<div style="display:flex;gap:12px"><div class="form-group" style="flex:1"><label>Місяць</label><input type="text" placeholder="12" maxlength="2"></div><div class="form-group" style="flex:1"><label>Рік</label><input type="text" placeholder="26" maxlength="2"></div></div>';
+  html+='<div class="form-group"><label>Ім\'я власника</label><input type="text" placeholder="Andrii Kondratiev"></div>';
+  html+='</div>';
+  html+='<div class="modal-foot"><button class="btn-pri" onclick="showToast(\'Карта додана\');closeModal()">Додати</button><button class="btn-sec" onclick="closeModal()">Скасувати</button></div>';
+  document.getElementById('modalContent').innerHTML=html;
+  openModal();
+}
+
+// === CAR MODAL ===
+function openCarModal(make,color,year,plate,space){
+  var html='<div class="modal-head"><div class="modal-title">'+make+'</div><button class="modal-close" onclick="closeModal()"><span class="ico">✕</span></button></div>';
+  html+='<div class="modal-body">';
+  html+='<div style="background:#f0f9ff;border-radius:var(--r-m);padding:40px 20px;text-align:center;margin-bottom:16px"><span class="ico"  style="font-size:40px;color:#2563eb">🚗</span></div>';
+  html+='<div class="rpt-row"><span class="rpt-label">Марка / Модель</span><span class="rpt-val">'+make+'</span></div>';
+  html+='<div class="rpt-row"><span class="rpt-label">Колір</span><span class="rpt-val">'+color+'</span></div>';
+  html+='<div class="rpt-row"><span class="rpt-label">Рік</span><span class="rpt-val">'+year+'</span></div>';
+  html+='<div class="rpt-row"><span class="rpt-label">Номерний знак</span><span class="rpt-val"><span class="car-plate">'+plate+'</span></span></div>';
+  html+='<div class="rpt-row"><span class="rpt-label">Паркомісце</span><span class="rpt-val">'+space+'</span></div>';
+  html+='</div>';
+  html+='<div class="modal-foot"><button class="btn-pri" onclick="showToast(\'Відредаговано\');closeModal()">Редагувати</button><button class="btn-sec" onclick="showToast(\'Видалено\');closeModal()">Видалити</button></div>';
+  document.getElementById('modalContent').innerHTML=html;
+  openModal();
+}
+
+// === ADD VEHICLE MODAL ===
+function openAddVehicleModal(){
+  var html='<div class="modal-head"><div class="modal-title">Додати автомобіль</div><button class="modal-close" onclick="closeModal()"><span class="ico">✕</span></button></div>';
+  html+='<div class="modal-body">';
+  html+='<div class="form-group"><label>Марка</label><input type="text" placeholder="Toyota"></div>';
+  html+='<div class="form-group"><label>Модель</label><input type="text" placeholder="Camry"></div>';
+  html+='<div class="form-group"><label>Рік випуску</label><input type="text" placeholder="2020" maxlength="4"></div>';
+  html+='<div class="form-group"><label>Колір</label><input type="text" placeholder="Білий"></div>';
+  html+='<div class="form-group"><label>Номерний знак</label><input type="text" placeholder="АВ 2456 КА"></div>';
+  html+='<div class="form-group"><label>Паркомісце</label><input type="text" placeholder="8"></div>';
+  html+='</div>';
+  html+='<div class="modal-foot"><button class="btn-pri" onclick="showToast(\'Автомобіль додан\');closeModal()">Додати</button><button class="btn-sec" onclick="closeModal()">Скасувати</button></div>';
+  document.getElementById('modalContent').innerHTML=html;
+  openModal();
+}
+
+// === KEY MODAL ===
+function openKeyModal(name,zones,status){
+  var html='<div class="modal-head"><div class="modal-title">'+name+'</div><button class="modal-close" onclick="closeModal()"><span class="ico">✕</span></button></div>';
+  html+='<div class="modal-body">';
+  html+='<div style="background:#dbeafe;border-radius:var(--r-m);padding:40px 20px;text-align:center;margin-bottom:16px"><span class="ico"  style="font-size:40px;color:#2563eb">🔑</span></div>';
+  html+='<div class="rpt-row"><span class="rpt-label">Статус</span><span class="rpt-val" style="color:'+(status==='Активний'?'#10b981':'#ef4444')+'">'+status+'</span></div>';
+  html+='<div class="rpt-row"><span class="rpt-label">Дата видачі</span><span class="rpt-val">01.01.2026</span></div>';
+  html+='<div class="rpt-row"><span class="rpt-label">Зони доступу</span><span class="rpt-val" style="text-align:right;max-width:150px">'+zones+'</span></div>';
+  html+='</div>';
+  html+='<div class="modal-foot"><button class="btn-pri err" onclick="showToast(\'Ключ заблокований\');closeModal()">Заблокувати ключ</button></div>';
+  document.getElementById('modalContent').innerHTML=html;
+  openModal();
+}
+
+// === ORDER KEY MODAL ===
+function openOrderKeyModal(){
+  var html='<div class="modal-head"><div class="modal-title">Замовлення ключа</div><button class="modal-close" onclick="closeModal()"><span class="ico">✕</span></button></div>';
+  html+='<div class="modal-body">';
+  html+='<label style="font-size:12px;font-weight:600;display:block;margin-bottom:8px">Тип ключа:</label>';
+  html+='<select style="width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:var(--r-m);margin-bottom:16px;font-size:14px"><option>Головний ключ</option><option>Запасний ключ</option><option>Гостьовий ключ</option></select>';
+  html+='<label style="font-size:12px;font-weight:600;display:block;margin-bottom:8px">Зони доступу:</label>';
+  html+='<div class="checkbox-group">';
+  html+='<div class="checkbox-item"><input type="checkbox" id="z1" checked><label for="z1">Квартира</label></div>';
+  html+='<div class="checkbox-item"><input type="checkbox" id="z2" checked><label for="z2">Вхід будинку</label></div>';
+  html+='<div class="checkbox-item"><input type="checkbox" id="z3"><label for="z3">Підвал</label></div>';
+  html+='<div class="checkbox-item"><input type="checkbox" id="z4"><label for="z4">Дах</label></div>';
+  html+='</div>';
+  html+='<div style="padding:12px;background:#f8fafc;border-radius:var(--r-m);margin:16px 0;text-align:center"><div style="font-size:12px;color:var(--txt2)">Вартість</div><div style="font-size:20px;font-weight:800">250 ₴</div></div>';
+  html+='</div>';
+  html+='<div class="modal-foot"><button class="btn-pri" onclick="showToast(\'Замовлення створено\');closeModal()">Замовити</button><button class="btn-sec" onclick="closeModal()">Скасувати</button></div>';
+  document.getElementById('modalContent').innerHTML=html;
+  openModal();
+}
+
+// === PASS MODAL ===
+function openPassModal(name,type,dates,status){
+  var html='<div class="modal-head"><div class="modal-title">'+name+'</div><button class="modal-close" onclick="closeModal()"><span class="ico">✕</span></button></div>';
+  html+='<div class="modal-body">';
+  html+='<div style="background:#f5f3ff;border-radius:var(--r-m);padding:40px 20px;text-align:center;margin-bottom:16px"><span class="ico"  style="font-size:40px;color:#7c3aed">•</span></div>';
+  html+='<div class="rpt-row"><span class="rpt-label">Тип</span><span class="rpt-val">'+type+'</span></div>';
+  html+='<div class="rpt-row"><span class="rpt-label">Період</span><span class="rpt-val">'+dates+'</span></div>';
+  html+='<div class="rpt-row"><span class="rpt-label">Статус</span><span class="rpt-val" style="color:'+(status==='Активний'?'#10b981':'#ea580c')+'">'+status+'</span></div>';
+  html+='<div style="text-align:center;margin:20px 0"><div style="width:120px;height:120px;background:#f0f9ff;border-radius:var(--r-m);margin:0 auto;display:flex;align-items:center;justify-content:center"><span class="ico"  style="font-size:48px;color:#2563eb">•</span></div></div>';
+  html+='</div>';
+  html+='<div class="modal-foot"><button class="btn-pri" onclick="showToast(\'Пропуск деактивировано\');closeModal()">Дезактивувати</button></div>';
+  document.getElementById('modalContent').innerHTML=html;
+  openModal();
+}
+
+// === NEW PASS MODAL ===
+function openNewPassModal(){
+  var html='<div class="modal-head"><div class="modal-title">Оформити пропуск</div><button class="modal-close" onclick="closeModal()"><span class="ico">✕</span></button></div>';
+  html+='<div class="modal-body">';
+  html+='<div class="form-group"><label>ПІБ гостя</label><input type="text" placeholder="Ім\'я Прізвище Батькові"></div>';
+  html+='<div class="form-group"><label>Тип пропуска</label><select><option>Разовий</option><option>Тимчасовий (до 7 днів)</option><option>Тимчасовий (до 30 днів)</option></select></div>';
+  html+='<div class="form-group"><label>Дата вхідного</label><input type="date"></div>';
+  html+='<div class="form-group"><label>Час вхідного</label><input type="time"></div>';
+  html+='<div class="form-group"><label>Дата вихідного</label><input type="date"></div>';
+  html+='<div class="form-group"><label>Час вихідного</label><input type="time"></div>';
+  html+='</div>';
+  html+='<div class="modal-foot"><button class="btn-pri" onclick="showToast(\'Пропуск оформлено\');closeModal()">Створити</button><button class="btn-sec" onclick="closeModal()">Скасувати</button></div>';
+  document.getElementById('modalContent').innerHTML=html;
+  openModal();
+}
+
+// === MESSAGE MODAL ===
+function openMsgModal(title,content,time){
+  var html='<div class="modal-head"><div class="modal-title">'+title+'</div><button class="modal-close" onclick="closeModal()"><span class="ico">✕</span></button></div>';
+  html+='<div class="modal-body">';
+  html+='<div style="margin-bottom:12px"><div style="font-size:12px;color:var(--txt2);margin-bottom:4px">'+time+'</div><div style="font-size:14px;line-height:1.6;color:var(--txt)">'+content+'</div></div>';
+  html+='<div style="padding:12px;background:#ecfdf5;border-radius:var(--r-m)"><span class="ico"  style="color:#10b981;margin-right:6px">✓</span><span style="font-size:12px;color:#10b981">Прочитано</span></div>';
+  html+='</div>';
+  html+='<div class="modal-foot"><button class="btn-pri" onclick="showToast(\'Додано в архів\');closeModal()">Архівувати</button></div>';
+  document.getElementById('modalContent').innerHTML=html;
+  openModal();
+}
+
+// === DOCUMENT MODAL ===
+function openDocModal(name,type,size,date){
+  var html='<div class="modal-head"><div class="modal-title">'+name+'</div><button class="modal-close" onclick="closeModal()"><span class="ico">✕</span></button></div>';
+  html+='<div class="modal-body">';
+  html+='<div style="background:#fef3c7;border-radius:var(--r-m);padding:40px 20px;text-align:center;margin-bottom:16px"><span class="ico"  style="font-size:40px;color:#f59e0b">📕</span></div>';
+  html+='<div class="rpt-row"><span class="rpt-label">Тип</span><span class="rpt-val">'+type+'</span></div>';
+  html+='<div class="rpt-row"><span class="rpt-label">Розмір</span><span class="rpt-val">'+size+'</span></div>';
+  html+='<div class="rpt-row"><span class="rpt-label">Дата</span><span class="rpt-val">'+date+'</span></div>';
+  html+='</div>';
+  html+='<div class="modal-foot"><button class="btn-pri" onclick="showToast(\'Завантаження...\')">Завантажити</button><button class="btn-sec" onclick="showToast(\'Підпис додан\');closeModal()">Підписати</button></div>';
+  document.getElementById('modalContent').innerHTML=html;
+  openModal();
+}
+
+// === VOTE MODAL ===
+function openVoteModal(question,options){
+  var html='<div class="modal-head"><div class="modal-title">Голосування</div><button class="modal-close" onclick="closeModal()"><span class="ico">✕</span></button></div>';
+  html+='<div class="modal-body">';
+  html+='<div style="font-size:16px;font-weight:700;margin-bottom:16px">'+question+'</div>';
+  html+='<div class="radio-group">';
+  for(var i=0;i<options.length;i++){
+    html+='<div class="radio-item"><input type="radio" id="opt'+i+'" name="vote"><label for="opt'+i+'">'+options[i]+'</label></div>';
+  }
+  html+='</div>';
+  html+='</div>';
+  html+='<div class="modal-foot"><button class="btn-pri" onclick="showToast(\'Ваш голос записаний\');closeModal()">Проголосувати</button><button class="btn-sec" onclick="closeModal()">Скасувати</button></div>';
+  document.getElementById('modalContent').innerHTML=html;
+  openModal();
+}
+
+// === TICKET MODAL ===
+function openTicketModal(id,title,desc,status,date){
+  var html='<div class="modal-head"><div class="modal-title">'+id+' - '+title+'</div><button class="modal-close" onclick="closeModal()"><span class="ico">✕</span></button></div>';
+  html+='<div class="modal-body">';
+  html+='<div class="rpt-row"><span class="rpt-label">Статус</span><span class="rpt-val">'+status+'</span></div>';
+  html+='<div class="rpt-row"><span class="rpt-label">Дата</span><span class="rpt-val">'+date+'</span></div>';
+  html+='<div style="margin-top:16px"><div style="font-size:12px;font-weight:600;margin-bottom:8px">Опис:</div><div style="font-size:13px;line-height:1.6;color:var(--txt2)">'+desc+'</div></div>';
+  html+='<div style="margin-top:16px;padding:12px;background:#f8fafc;border-radius:var(--r-m)"><div style="font-size:12px;color:var(--txt2);margin-bottom:4px">Коментарі</div><input type="text" placeholder="Додати коментар..." style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--r-s);font-size:13px"></div>';
+  html+='</div>';
+  html+='<div class="modal-foot"><button class="btn-pri" onclick="showToast(\'Заявка закрита\');closeModal()">Закрити заявку</button></div>';
+  document.getElementById('modalContent').innerHTML=html;
+  openModal();
+}
+
+// === NEW TICKET MODAL ===
+function openNewTicketModal(){
+  var html='<div class="modal-head"><div class="modal-title">Нова заявка</div><button class="modal-close" onclick="closeModal()"><span class="ico">✕</span></button></div>';
+  html+='<div class="modal-body">';
+  html+='<div class="form-group"><label>Категорія</label><select><option>Проблема в квартирі</option><option>Проблема в спільних зонах</option><option>Запит документів</option><option>Бізнес питання</option><option>Інше</option></select></div>';
+  html+='<div class="form-group"><label>Опис проблеми</label><textarea placeholder="Детально опишіть проблему..." style="width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:var(--r-m);font-size:14px;min-height:100px;font-family:inherit"></textarea></div>';
+  html+='<div class="form-group"><label>Прикріпити фото (опційно)</label><input type="file" accept="image/*" style="width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:var(--r-m);font-size:14px"></div>';
+  html+='</div>';
+  html+='<div class="modal-foot"><button class="btn-pri" onclick="showToast(\'Заявка створена\');closeModal()">Створити заявку</button><button class="btn-sec" onclick="closeModal()">Скасувати</button></div>';
+  document.getElementById('modalContent').innerHTML=html;
+  openModal();
+}
+
+// === EDIT PROFILE MODAL ===
+function openEditProfileModal(){
+  var html='<div class="modal-head"><div class="modal-title">Редагування профілю</div><button class="modal-close" onclick="closeModal()"><span class="ico">✕</span></button></div>';
+  html+='<div class="modal-body">';
+  html+='<div class="form-group"><label>Ім\'я</label><input type="text" value="Андрій"></div>';
+  html+='<div class="form-group"><label>Прізвище</label><input type="text" value="Кондратьєв"></div>';
+  html+='<div class="form-group"><label>Телефон</label><input type="tel" value="+380 50 123 4567"></div>';
+  html+='<div class="form-group"><label>Email</label><input type="email" value="andrey.kondratiev@yahoo.com"></div>';
+  html+='</div>';
+  html+='<div class="modal-foot"><button class="btn-pri" onclick="showToast(\'Профіль оновленo\');closeModal()">Зберегти</button><button class="btn-sec" onclick="closeModal()">Скасувати</button></div>';
+  document.getElementById('modalContent').innerHTML=html;
+  openModal();
+}
+
+// === METER READING MODAL ===
+function openMeterModal(){
+  var html='<div class="modal-head"><div class="modal-title">Подати показники</div><button class="modal-close" onclick="closeModal()"><span class="ico">✕</span></button></div>';
+  html+='<div class="modal-body">';
+  html+='<div class="form-group"><label>Холодна вода (м³)</label><input type="number" placeholder="0.00" value="125"></div>';
+  html+='<div class="form-group"><label>Гаряча вода (м³)</label><input type="number" placeholder="0.00" value="45"></div>';
+  html+='<div class="form-group"><label>Електроенергія (кВт·год)</label><input type="number" placeholder="0.00" value="312"></div>';
+  html+='</div>';
+  html+='<div class="modal-foot"><button class="btn-pri" onclick="showToast(\'Показники подані\');closeModal()">Подати</button><button class="btn-sec" onclick="closeModal()">Скасувати</button></div>';
+  document.getElementById('modalContent').innerHTML=html;
+  openModal();
+}
+
+// === NOTIFICATION PANEL MODAL ===
+function openNotifModal(){
+  var html='<div class="modal-head"><div class="modal-title">Сповіщення</div><button class="modal-close" onclick="closeModal()"><span class="ico">✕</span></button></div>';
+  html+='<div class="modal-body">';
+  html+='<div class="msg unread"><div class="msg-dot"></div><div class="li-body"><div class="li-title">Рахунок на сплату</div><div class="li-desc">Лютий 2026 - 850 ₴</div><div class="li-time">10 хвилин назад</div></div></div>';
+  html+='<div class="msg unread"><div class="msg-dot"></div><div class="li-body"><div class="li-title">Вовлеченість в голосування</div><div class="li-desc">Актуальна інформація для голосування</div><div class="li-time">2 години назад</div></div></div>';
+  html+='<div class="msg unread"><div class="msg-dot"></div><div class="li-body"><div class="li-title">Нова дослідження</div><div class="li-desc">Участь у опитуванні "Додаткові послуги"</div><div class="li-time">1 день назад</div></div></div>';
+  html+='<div class="msg"><div class="msg-dot read"></div><div class="li-body"><div class="li-title">Оновлення профілю</div><div class="li-desc">Ваш email верифіковано</div><div class="li-time">3 днів назад</div></div></div>';
+  html+='<div class="msg"><div class="msg-dot read"></div><div class="li-body"><div class="li-title">Безпека</div><div class="li-desc">Новий вхід в акаунт з iPad</div><div class="li-time">1 тиждень назад</div></div></div>';
+  html+='</div>';
+  html+='<div class="modal-foot"><button class="btn-sec" style="flex:1;margin:0" onclick="showToast(\'Усе прочитано\');closeModal()">Позначити як прочитано</button></div>';
+  document.getElementById('modalContent').innerHTML=html;
+  openModal();
+}
+
+// === PASSWORD CHANGE MODAL ===
+function openPasswordModal(){
+  var html='<div class="modal-head"><div class="modal-title">Змінити пароль</div><button class="modal-close" onclick="closeModal()"><span class="ico">✕</span></button></div>';
+  html+='<div class="modal-body">';
+  html+='<div class="form-group"><label>Поточний пароль</label><input type="password" placeholder="••••••••"></div>';
+  html+='<div class="form-group"><label>Новий пароль</label><input type="password" placeholder="••••••••"></div>';
+  html+='<div class="form-group"><label>Підтвердити новий пароль</label><input type="password" placeholder="••••••••"></div>';
+  html+='</div>';
+  html+='<div class="modal-foot"><button class="btn-pri" onclick="showToast(\'Пароль змінено\');closeModal()">Змінити</button><button class="btn-sec" onclick="closeModal()">Скасувати</button></div>';
+  document.getElementById('modalContent').innerHTML=html;
+  openModal();
+}
+
+// === LANGUAGE MODAL ===
+function openLanguageModal(){
+  var html='<div class="modal-head"><div class="modal-title">Мова</div><button class="modal-close" onclick="closeModal()"><span class="ico">✕</span></button></div>';
+  html+='<div class="modal-body">';
+  html+='<div class="radio-group">';
+  html+='<div class="radio-item"><input type="radio" id="lang1" name="lang" checked><label for="lang1">Українська</label></div>';
+  html+='<div class="radio-item"><input type="radio" id="lang2" name="lang"><label for="lang2">Русский</label></div>';
+  html+='<div class="radio-item"><input type="radio" id="lang3" name="lang"><label for="lang3">English</label></div>';
+  html+='</div>';
+  html+='</div>';
+  html+='<div class="modal-foot"><button class="btn-pri" onclick="showToast(\'Мова збережена\');closeModal()">Зберегти</button><button class="btn-sec" onclick="closeModal()">Скасувати</button></div>';
+  document.getElementById('modalContent').innerHTML=html;
+  openModal();
+}
+
+// === TABS (simple toggle) ===
+document.querySelectorAll('.tabs').forEach(function(tabs){
+  tabs.querySelectorAll('.tab').forEach(function(tab){
+    tab.addEventListener('click',function(){
+      tabs.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});
+      tab.classList.add('active');
+    });
+  });
+});
+
+// === SUPPORT TABS ===
+function showSupportTab(tab){
+  document.getElementById('support-active').style.display=tab==='active'?'block':'none';
+  document.getElementById('support-done').style.display=tab==='done'?'block':'none';
+  document.getElementById('support-all').style.display=tab==='all'?'block':'none';
+}
+
+// === KEYS / PASSES TABS ===
+function showKeysTab(tab){
+  document.getElementById('keys-keys').style.display=tab==='keys'?'block':'none';
+  document.getElementById('keys-passes').style.display=tab==='passes'?'block':'none';
+}
+
+// === MONTH PICKER ===
+var months=['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
+var curMonth=2; // 0-indexed: March = 2
+var curYear=2026;
+var rptData={
+  '2026-2':{items:[['Утримання будинку','850,00 ₴'],['Прибирання території','120,00 ₴'],['Освітлення місць загального користування','85,00 ₴'],['Обслуговування ліфта','95,00 ₴'],['Охорана','100,00 ₴']],total:'1 250,00 ₴',paid:false},
+  '2026-1':{items:[['Утримання будинку','820,00 ₴'],['Прибирання території','120,00 ₴'],['Освітлення місць загального користування','90,00 ₴'],['Обслуговування ліфта','95,00 ₴'],['Охорана','55,00 ₴']],total:'1 180,00 ₴',paid:true},
+  '2026-0':{items:[['Утримання будинку','820,00 ₴'],['Прибирання території','120,00 ₴'],['Освітлення місць загального користування','92,00 ₴'],['Обслуговування ліфта','95,00 ₴'],['Охорана','53,00 ₴']],total:'1 180,00 ₴',paid:true},
+  '2025-11':{items:[['Утримання будинку','800,00 ₴'],['Прибирання території','110,00 ₴'],['Освітлення місць загального користування','88,00 ₴'],['Обслуговування ліфта','95,00 ₴'],['Охорана','57,00 ₴']],total:'1 150,00 ₴',paid:true}
+};
+function changeMonth(dir){
+  curMonth+=dir;
+  if(curMonth<0){curMonth=11;curYear--}
+  if(curMonth>11){curMonth=0;curYear++}
+  renderMonth();
+}
+function renderMonth(){
+  var key=curYear+'-'+curMonth;
+  var d=rptData[key];
+  var isCurrent=(curYear===2026&&curMonth===2);
+  document.getElementById('mpNext').disabled=isCurrent;
+  document.getElementById('mpNext').style.opacity=isCurrent?'.4':'1';
+  var label=months[curMonth]+' '+curYear;
+  if(isCurrent)label+=' <div class="mp-sub">Поточний місяць</div>';
+  document.getElementById('mpLabel').innerHTML=label;
+  if(!d){
+    document.getElementById('rpt-content').innerHTML='<div class="card"><div style="padding:40px 20px;text-align:center;color:var(--txt2)"><span class="ico"  style="font-size:40px;color:var(--border);display:block;margin-bottom:12px">•</span><p>Немає даних за цей місяць</p></div></div>';
+    return;
+  }
+  var h='<div class="card" style="margin-bottom:12px">';
+  d.items.forEach(function(r){h+='<div class="rpt-row"><span class="rpt-label">'+r[0]+'</span><span class="rpt-val">'+r[1]+'</span></div>'});
+  h+='<div class="rpt-row" style="background:#f8fafc;font-weight:700"><span class="rpt-label" style="font-weight:700;color:var(--txt)">Разом</span><span class="rpt-val" style="font-size:16px;color:'+(d.paid?'var(--suc)':'var(--err)')+'">'+d.total+'</span></div></div>';
+  h+='<div style="display:flex;gap:8px;margin-bottom:16px"><div class="card" style="flex:1;padding:14px;text-align:center"><div style="font-size:11px;color:var(--txt2);margin-bottom:4px">Статус</div><div style="font-size:13px;font-weight:700;color:'+(d.paid?'var(--suc)':'var(--err)')+'"><span class="ico">'+(d.paid?'✓':'⚠')+'</span> '+(d.paid?'Оплачено':'Не оплачено')+'</div></div>';
+  if(!d.paid){h+='<div class="card" style="flex:1;padding:14px;text-align:center"><div style="font-size:11px;color:var(--txt2);margin-bottom:4px">Оплатити до</div><div style="font-size:13px;font-weight:700">09.04.2026</div></div>'}
+  else{h+='<div class="card" style="flex:1;padding:14px;text-align:center"><div style="font-size:11px;color:var(--txt2);margin-bottom:4px">Дата оплати</div><div style="font-size:13px;font-weight:700">Оплачено вчасно</div></div>'}
+  h+='</div>';
+  document.getElementById('rpt-content').innerHTML=h;
+}
+</script>
+</body>
+</html>
