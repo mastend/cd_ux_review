@@ -178,6 +178,24 @@ img{max-width:100%;display:block}
 .btn-pri.err{background:var(--err)}
 .btn-pri.err:active{background:#dc2626}
 
+/* Filter selects */
+.filter-select{width:100%;border:1px solid var(--border);border-radius:var(--r-s);padding:8px 10px;font-size:13px;font-weight:500;color:var(--txt);background:var(--white);-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;cursor:pointer}
+.filter-select:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(14,165,233,.15)}
+
+/* Chart bars interactive */
+.chart-bar{position:relative;cursor:pointer;transition:opacity .15s}
+.chart-bar:hover{opacity:.8}
+.chart-tooltip{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;font-size:11px;font-weight:600;padding:4px 8px;border-radius:6px;white-space:nowrap;z-index:10;pointer-events:none}
+.chart-tooltip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:4px solid transparent;border-top-color:#1e293b}
+.chart-bar:hover .chart-tooltip{display:block}
+
+/* Chart loader */
+.chart-loader{display:flex;align-items:center;justify-content:center;padding:40px 0;gap:8px}
+.chart-loader .dot{width:8px;height:8px;border-radius:50%;background:var(--pri);animation:chartPulse .8s ease-in-out infinite}
+.chart-loader .dot:nth-child(2){animation-delay:.15s}
+.chart-loader .dot:nth-child(3){animation-delay:.3s}
+@keyframes chartPulse{0%,80%,100%{transform:scale(.6);opacity:.4}40%{transform:scale(1);opacity:1}}
+
 /* Invoice items */
 .inv{padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer}
 .inv+.inv{border-top:1px solid var(--border-l)}
@@ -424,6 +442,7 @@ img{max-width:100%;display:block}
       <button class="sb-item" data-page="invoices" onclick="go('invoices')"><span class="ico">📄</span>Оплата рахунків<span class="sb-badge">3</span></button>
       <button class="sb-item" data-page="wallet" onclick="go('wallet')"><span class="ico">💰</span>Гаманець</button>
       <button class="sb-item" data-page="reports" onclick="go('reports')"><span class="ico">📊</span>Мої нарахування</button>
+      <button class="sb-item" data-page="accounting" onclick="go('accounting')"><span class="ico">📋</span>Центр звітності<span class="sb-badge green">нове</span></button>
     </div>
     <div class="sb-group">
       <div class="sb-label">Управління нерухомістю</div>
@@ -559,6 +578,659 @@ img{max-width:100%;display:block}
     </div>
   </div>
   <button class="btn-pri" onclick="go('invoices')" style="margin-top:4px"><span class="ico">💳</span> Сплатити</button>
+</div>
+
+<!-- PAGE: Accounting (Центр звітності / Розрахунки з домоуправителем) -->
+<div class="page" id="p-accounting">
+  <div class="greet"><h1>Центр звітності</h1><p>Розрахунки з домоуправителем</p></div>
+
+  <!-- Фільтри -->
+  <div class="card" style="margin-bottom:16px;padding:12px 16px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <div style="flex:1;min-width:140px">
+        <div style="font-size:10px;color:var(--txt3);margin-bottom:2px">Домоуправитель</div>
+        <div style="font-size:13px;font-weight:600;color:var(--txt)">ОСББ «Парадайз Авеню»</div>
+      </div>
+      <div style="flex:1;min-width:80px">
+        <div style="font-size:10px;color:var(--txt3);margin-bottom:2px">Об'єкт</div>
+        <div style="font-size:13px;font-weight:500">Всі</div>
+      </div>
+      <div style="flex:1;min-width:80px">
+        <div style="font-size:10px;color:var(--txt3);margin-bottom:2px">Внесок / послуга</div>
+        <div style="font-size:13px;font-weight:500">Усі</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs" id="accTabs" style="margin-bottom:16px">
+    <button class="tab active" onclick="showAccTab('rozrah')">Розрахунки</button>
+    <button class="tab" onclick="showAccTab('radar')">Платіжний радар</button>
+    <button class="tab" onclick="showAccTab('bank')">Банк. рахунки</button>
+    <button class="tab" onclick="showAccTab('cashflow')">Рух коштів</button>
+  </div>
+
+  <!-- TAB 1: Розрахунки з домоуправителем -->
+  <div id="acc-rozrah">
+    <div class="sec"><div class="sec-h"><span class="sec-t">Стан розрахунків</span><span style="font-size:12px;color:#0ea5e9;font-weight:500;cursor:pointer" onclick="showToast('Період: 08.04.2025 – 08.04.2026')">08.04.2025 – 08.04.2026 ▾</span></div></div>
+    <!-- Графік: Стан розрахунків -->
+    <div class="card" style="margin-bottom:16px;padding:16px" id="chart-rozrah">
+      <div class="chart-loader" id="loader-rozrah" style="display:none"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      <div id="chart-rozrah-content">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+        <span style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#0ea5e9;display:inline-block"></span> Дебет</span>
+        <span style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#22c55e;display:inline-block"></span> Кредит</span>
+        <span style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#1e293b;display:inline-block"></span> Борг</span>
+        <span style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#a855f7;display:inline-block"></span> Підвищений тариф</span>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:4px;height:120px;padding:0 4px">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:1px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:35%"><span class="chart-tooltip">350 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#22c55e;border-radius:2px 2px 0 0;height:30%"><span class="chart-tooltip">300 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#1e293b;border-radius:2px 2px 0 0;height:8%"><span class="chart-tooltip">80 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Кві</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:1px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:40%"><span class="chart-tooltip">400 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#22c55e;border-radius:2px 2px 0 0;height:35%"><span class="chart-tooltip">350 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#1e293b;border-radius:2px 2px 0 0;height:10%"><span class="chart-tooltip">100 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Тра</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:1px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:38%"><span class="chart-tooltip">380 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#22c55e;border-radius:2px 2px 0 0;height:33%"><span class="chart-tooltip">330 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#1e293b;border-radius:2px 2px 0 0;height:7%"><span class="chart-tooltip">70 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Чер</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:1px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:30%"><span class="chart-tooltip">300 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#22c55e;border-radius:2px 2px 0 0;height:25%"><span class="chart-tooltip">250 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#1e293b;border-radius:2px 2px 0 0;height:6%"><span class="chart-tooltip">60 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Лип</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:1px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:32%"><span class="chart-tooltip">320 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#22c55e;border-radius:2px 2px 0 0;height:28%"><span class="chart-tooltip">280 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#1e293b;border-radius:2px 2px 0 0;height:5%"><span class="chart-tooltip">50 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Сер</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:1px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:45%"><span class="chart-tooltip">450 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#22c55e;border-radius:2px 2px 0 0;height:40%"><span class="chart-tooltip">400 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#1e293b;border-radius:2px 2px 0 0;height:9%"><span class="chart-tooltip">90 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Вер</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:1px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:50%"><span class="chart-tooltip">500 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#22c55e;border-radius:2px 2px 0 0;height:42%"><span class="chart-tooltip">420 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#1e293b;border-radius:2px 2px 0 0;height:12%"><span class="chart-tooltip">120 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Жов</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:1px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:55%"><span class="chart-tooltip">550 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#22c55e;border-radius:2px 2px 0 0;height:45%"><span class="chart-tooltip">450 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#1e293b;border-radius:2px 2px 0 0;height:15%"><span class="chart-tooltip">150 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Лис</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:1px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:80%"><span class="chart-tooltip">800 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#22c55e;border-radius:2px 2px 0 0;height:60%"><span class="chart-tooltip">600 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#1e293b;border-radius:2px 2px 0 0;height:25%"><span class="chart-tooltip">250 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#a855f7;border-radius:2px 2px 0 0;height:15%"><span class="chart-tooltip">150 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Гру</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:1px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:90%"><span class="chart-tooltip">900 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#22c55e;border-radius:2px 2px 0 0;height:70%"><span class="chart-tooltip">700 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#1e293b;border-radius:2px 2px 0 0;height:28%"><span class="chart-tooltip">280 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Січ</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:1px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:85%"><span class="chart-tooltip">850 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#22c55e;border-radius:2px 2px 0 0;height:75%"><span class="chart-tooltip">750 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#1e293b;border-radius:2px 2px 0 0;height:18%"><span class="chart-tooltip">180 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Лют</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:1px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:95%"><span class="chart-tooltip">950 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#22c55e;border-radius:2px 2px 0 0;height:80%"><span class="chart-tooltip">800 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#1e293b;border-radius:2px 2px 0 0;height:20%"><span class="chart-tooltip">200 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Бер</span>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- KPI карточки -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">
+      <div class="card" style="padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--txt3);margin-bottom:2px">Всього нараховано <span class="ico" style="font-size:10px">ⓘ</span></div>
+        <div style="font-size:15px;font-weight:700">16,20 млн грн</div>
+      </div>
+      <div class="card" style="padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--txt3);margin-bottom:2px">Всього сплачено <span class="ico" style="font-size:10px">ⓘ</span></div>
+        <div style="font-size:15px;font-weight:700">13,03 млн грн</div>
+      </div>
+      <div class="card" style="padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--txt3);margin-bottom:2px">Рівень сплати <span class="ico" style="font-size:10px">ⓘ</span></div>
+        <div style="font-size:15px;font-weight:700;color:var(--pri)">80.43%</div>
+      </div>
+      <div class="card" style="padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--txt3);margin-bottom:2px">Борг за період <span class="ico" style="font-size:10px">ⓘ</span></div>
+        <div style="font-size:15px;font-weight:700;color:var(--err)">3,10 млн грн</div>
+      </div>
+      <div class="card" style="padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--txt3);margin-bottom:2px">Всього боргу <span class="ico" style="font-size:10px">ⓘ</span></div>
+        <div style="font-size:15px;font-weight:700;color:var(--err)">3,56 млн грн</div>
+      </div>
+      <div class="card" style="padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--txt3);margin-bottom:2px">Всього переплати <span class="ico" style="font-size:10px">ⓘ</span></div>
+        <div style="font-size:15px;font-weight:700;color:var(--suc)">9,14 тис грн</div>
+      </div>
+    </div>
+
+    <!-- Структура нарахувань -->
+    <div class="sec"><div class="sec-h"><span class="sec-t">Структура нарахувань</span><span style="font-size:12px;color:#0ea5e9;font-weight:500;cursor:pointer" onclick="showToast('Період: 08.04.2025 – 08.04.2026')">08.04.2025 – 08.04.2026 ▾</span></div></div>
+    <div class="card" style="margin-bottom:16px;padding:16px" id="chart-struct">
+      <div class="chart-loader" id="loader-struct" style="display:none"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      <div id="chart-struct-content">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+        <span style="font-size:10px;padding:2px 6px;background:#0ea5e9;color:#fff;border-radius:4px">Утримання</span>
+        <span style="font-size:10px;padding:2px 6px;background:#22c55e;color:#fff;border-radius:4px">Ремонт</span>
+        <span style="font-size:10px;padding:2px 6px;background:#1e293b;color:#fff;border-radius:4px">Резервний фонд</span>
+        <span style="font-size:10px;padding:2px 6px;background:#a855f7;color:#fff;border-radius:4px">КВП та водовідведення</span>
+        <span style="font-size:10px;padding:2px 6px;background:#f59e0b;color:#fff;border-radius:4px">Електропостачання</span>
+        <span style="font-size:10px;padding:2px 6px;background:#ef4444;color:#fff;border-radius:4px">Охорона та безпека</span>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:4px;height:100px">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="width:100%;height:80px;display:flex;flex-direction:column;justify-content:flex-end">
+            <div class="chart-bar" style="background:#0ea5e9;height:30%;border-radius:2px 2px 0 0"><span class="chart-tooltip">Утримання: 300 тис ₴</span></div>
+            <div class="chart-bar" style="background:#22c55e;height:15%;"><span class="chart-tooltip">Ремонт: 150 тис ₴</span></div>
+            <div class="chart-bar" style="background:#1e293b;height:5%;"><span class="chart-tooltip">Резерв: 50 тис ₴</span></div>
+            <div class="chart-bar" style="background:#a855f7;height:12%;"><span class="chart-tooltip">КВП: 120 тис ₴</span></div>
+            <div class="chart-bar" style="background:#f59e0b;height:8%;"><span class="chart-tooltip">Електро: 80 тис ₴</span></div>
+            <div class="chart-bar" style="background:#ef4444;height:10%;border-radius:0 0 2px 2px"><span class="chart-tooltip">Охорона: 100 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Кві</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="width:100%;height:80px;display:flex;flex-direction:column;justify-content:flex-end">
+            <div class="chart-bar" style="background:#0ea5e9;height:32%;border-radius:2px 2px 0 0"><span class="chart-tooltip">Утримання: 320 тис ₴</span></div>
+            <div class="chart-bar" style="background:#22c55e;height:18%;"><span class="chart-tooltip">Ремонт: 180 тис ₴</span></div>
+            <div class="chart-bar" style="background:#a855f7;height:12%;"><span class="chart-tooltip">КВП: 120 тис ₴</span></div>
+            <div class="chart-bar" style="background:#f59e0b;height:8%;"><span class="chart-tooltip">Електро: 80 тис ₴</span></div>
+            <div class="chart-bar" style="background:#ef4444;height:10%;border-radius:0 0 2px 2px"><span class="chart-tooltip">Охорона: 100 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Тра</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="width:100%;height:80px;display:flex;flex-direction:column;justify-content:flex-end">
+            <div class="chart-bar" style="background:#0ea5e9;height:28%;border-radius:2px 2px 0 0"><span class="chart-tooltip">Утримання: 280 тис ₴</span></div>
+            <div class="chart-bar" style="background:#22c55e;height:12%;"><span class="chart-tooltip">Ремонт: 120 тис ₴</span></div>
+            <div class="chart-bar" style="background:#a855f7;height:10%;"><span class="chart-tooltip">КВП: 100 тис ₴</span></div>
+            <div class="chart-bar" style="background:#f59e0b;height:7%;"><span class="chart-tooltip">Електро: 70 тис ₴</span></div>
+            <div class="chart-bar" style="background:#ef4444;height:8%;border-radius:0 0 2px 2px"><span class="chart-tooltip">Охорона: 80 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Чер</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="width:100%;height:80px;display:flex;flex-direction:column;justify-content:flex-end">
+            <div class="chart-bar" style="background:#0ea5e9;height:22%;border-radius:2px 2px 0 0"><span class="chart-tooltip">Утримання: 220 тис ₴</span></div>
+            <div class="chart-bar" style="background:#22c55e;height:10%;"><span class="chart-tooltip">Ремонт: 100 тис ₴</span></div>
+            <div class="chart-bar" style="background:#a855f7;height:8%;"><span class="chart-tooltip">КВП: 80 тис ₴</span></div>
+            <div class="chart-bar" style="background:#ef4444;height:7%;border-radius:0 0 2px 2px"><span class="chart-tooltip">Охорона: 70 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Лип</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="width:100%;height:80px;display:flex;flex-direction:column;justify-content:flex-end">
+            <div class="chart-bar" style="background:#0ea5e9;height:24%;border-radius:2px 2px 0 0"><span class="chart-tooltip">Утримання: 240 тис ₴</span></div>
+            <div class="chart-bar" style="background:#22c55e;height:12%;"><span class="chart-tooltip">Ремонт: 120 тис ₴</span></div>
+            <div class="chart-bar" style="background:#a855f7;height:10%;"><span class="chart-tooltip">КВП: 100 тис ₴</span></div>
+            <div class="chart-bar" style="background:#ef4444;height:8%;border-radius:0 0 2px 2px"><span class="chart-tooltip">Охорона: 80 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Сер</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="width:100%;height:80px;display:flex;flex-direction:column;justify-content:flex-end">
+            <div class="chart-bar" style="background:#0ea5e9;height:35%;border-radius:2px 2px 0 0"><span class="chart-tooltip">Утримання: 350 тис ₴</span></div>
+            <div class="chart-bar" style="background:#22c55e;height:18%;"><span class="chart-tooltip">Ремонт: 180 тис ₴</span></div>
+            <div class="chart-bar" style="background:#a855f7;height:15%;"><span class="chart-tooltip">КВП: 150 тис ₴</span></div>
+            <div class="chart-bar" style="background:#f59e0b;height:10%;"><span class="chart-tooltip">Електро: 100 тис ₴</span></div>
+            <div class="chart-bar" style="background:#ef4444;height:12%;border-radius:0 0 2px 2px"><span class="chart-tooltip">Охорона: 120 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Вер</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="width:100%;height:80px;display:flex;flex-direction:column;justify-content:flex-end">
+            <div class="chart-bar" style="background:#0ea5e9;height:30%;border-radius:2px 2px 0 0"><span class="chart-tooltip">Утримання: 300 тис ₴</span></div>
+            <div class="chart-bar" style="background:#22c55e;height:15%;"><span class="chart-tooltip">Ремонт: 150 тис ₴</span></div>
+            <div class="chart-bar" style="background:#a855f7;height:12%;"><span class="chart-tooltip">КВП: 120 тис ₴</span></div>
+            <div class="chart-bar" style="background:#ef4444;height:10%;border-radius:0 0 2px 2px"><span class="chart-tooltip">Охорона: 100 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Жов</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="width:100%;height:80px;display:flex;flex-direction:column;justify-content:flex-end">
+            <div class="chart-bar" style="background:#0ea5e9;height:32%;border-radius:2px 2px 0 0"><span class="chart-tooltip">Утримання: 320 тис ₴</span></div>
+            <div class="chart-bar" style="background:#22c55e;height:15%;"><span class="chart-tooltip">Ремонт: 150 тис ₴</span></div>
+            <div class="chart-bar" style="background:#a855f7;height:12%;"><span class="chart-tooltip">КВП: 120 тис ₴</span></div>
+            <div class="chart-bar" style="background:#ef4444;height:10%;border-radius:0 0 2px 2px"><span class="chart-tooltip">Охорона: 100 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Лис</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="width:100%;height:80px;display:flex;flex-direction:column;justify-content:flex-end">
+            <div class="chart-bar" style="background:#0ea5e9;height:50%;border-radius:2px 2px 0 0"><span class="chart-tooltip">Утримання: 500 тис ₴</span></div>
+            <div class="chart-bar" style="background:#22c55e;height:22%;"><span class="chart-tooltip">Ремонт: 220 тис ₴</span></div>
+            <div class="chart-bar" style="background:#a855f7;height:18%;border-radius:0 0 2px 2px"><span class="chart-tooltip">КВП: 180 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Гру</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="width:100%;height:80px;display:flex;flex-direction:column;justify-content:flex-end">
+            <div class="chart-bar" style="background:#0ea5e9;height:55%;border-radius:2px 2px 0 0"><span class="chart-tooltip">Утримання: 550 тис ₴</span></div>
+            <div class="chart-bar" style="background:#22c55e;height:20%;"><span class="chart-tooltip">Ремонт: 200 тис ₴</span></div>
+            <div class="chart-bar" style="background:#a855f7;height:15%;border-radius:0 0 2px 2px"><span class="chart-tooltip">КВП: 150 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Січ</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="width:100%;height:80px;display:flex;flex-direction:column;justify-content:flex-end">
+            <div class="chart-bar" style="background:#0ea5e9;height:48%;border-radius:2px 2px 0 0"><span class="chart-tooltip">Утримання: 480 тис ₴</span></div>
+            <div class="chart-bar" style="background:#22c55e;height:18%;"><span class="chart-tooltip">Ремонт: 180 тис ₴</span></div>
+            <div class="chart-bar" style="background:#a855f7;height:14%;border-radius:0 0 2px 2px"><span class="chart-tooltip">КВП: 140 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Лют</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="width:100%;height:80px;display:flex;flex-direction:column;justify-content:flex-end">
+            <div class="chart-bar" style="background:#0ea5e9;height:52%;border-radius:2px 2px 0 0"><span class="chart-tooltip">Утримання: 520 тис ₴</span></div>
+            <div class="chart-bar" style="background:#22c55e;height:20%;"><span class="chart-tooltip">Ремонт: 200 тис ₴</span></div>
+            <div class="chart-bar" style="background:#a855f7;height:16%;border-radius:0 0 2px 2px"><span class="chart-tooltip">КВП: 160 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Бер</span>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: Платіжний радар -->
+  <div id="acc-radar" style="display:none">
+    <div class="card" style="margin-bottom:12px;padding:12px 16px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+        <div style="flex:1;min-width:100px">
+          <label style="font-size:10px;color:var(--txt3);display:block;margin-bottom:3px">Будинок</label>
+          <select class="filter-select" onchange="showRadarLoader()">
+            <option>Всі</option>
+            <option selected>вул. Панорамна, 2</option>
+          </select>
+        </div>
+        <div style="flex:1;min-width:80px">
+          <label style="font-size:10px;color:var(--txt3);display:block;margin-bottom:3px">Секція</label>
+          <select class="filter-select" onchange="showRadarLoader()">
+            <option selected>Всі</option>
+            <option>Секція 1</option>
+            <option>Секція 2</option>
+            <option>Секція 3</option>
+            <option>Секція 4</option>
+          </select>
+        </div>
+        <div style="flex:1;min-width:80px">
+          <label style="font-size:10px;color:var(--txt3);display:block;margin-bottom:3px">Поверх</label>
+          <select class="filter-select" onchange="showRadarLoader()">
+            <option selected>Всі</option>
+            <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+            <option>6</option><option>7</option><option>8</option><option>9</option><option>10</option>
+            <option>11</option><option>12</option><option>13</option><option>14</option><option>15</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="sec"><div class="sec-h"><span class="sec-t">вул. Панорамна, 2, секція 1</span></div></div>
+
+    <!-- Поверх 1 -->
+    <div class="card" style="margin-bottom:16px;padding:16px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px">Поверх 1</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px">
+        <div style="border:1px solid var(--border-l);border-radius:var(--r-m);padding:10px" onclick="showToast('Деталі № 489')">
+          <div style="font-size:13px;font-weight:600"><span class="ico" style="margin-right:4px;font-size:12px">🏪</span> № 489</div>
+          <div style="font-size:11px;color:var(--txt2)">Комерційне приміщення</div>
+          <div style="font-size:12px;font-weight:600;color:var(--err);margin-top:4px">Борг</div>
+        </div>
+        <div style="border:1px solid var(--border-l);border-radius:var(--r-m);padding:10px" onclick="showToast('Деталі № 490')">
+          <div style="font-size:13px;font-weight:600"><span class="ico" style="margin-right:4px;font-size:12px">🏪</span> № 490</div>
+          <div style="font-size:11px;color:var(--txt2)">Комерційне приміщення</div>
+          <div style="font-size:12px;font-weight:600;color:var(--err);margin-top:4px">Борг</div>
+        </div>
+        <div style="border:1px solid var(--border-l);border-radius:var(--r-m);padding:10px" onclick="showToast('Деталі № 482')">
+          <div style="font-size:13px;font-weight:600"><span class="ico" style="margin-right:4px;font-size:12px">📦</span> № 482</div>
+          <div style="font-size:11px;color:var(--txt2)">Комора</div>
+          <div style="font-size:12px;font-weight:600;color:var(--suc);margin-top:4px">Все сплачено</div>
+        </div>
+        <div style="border:1px solid var(--border-l);border-radius:var(--r-m);padding:10px" onclick="showToast('Деталі № 483')">
+          <div style="font-size:13px;font-weight:600"><span class="ico" style="margin-right:4px;font-size:12px">📦</span> № 483</div>
+          <div style="font-size:11px;color:var(--txt2)">Комора</div>
+          <div style="font-size:12px;font-weight:600;color:var(--err);margin-top:4px">Борг</div>
+        </div>
+      </div>
+      <div style="font-size:13px;font-weight:600;color:var(--txt2);display:flex;align-items:center;gap:6px"><span class="ico">📊</span> Сукупний борг поверху: 65 551,99 грн</div>
+    </div>
+
+    <!-- Поверх 2 -->
+    <div class="card" style="margin-bottom:16px;padding:16px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px">Поверх 2</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px">
+        <div style="border:1px solid var(--border-l);border-radius:var(--r-m);padding:10px" onclick="showToast('Деталі № 1')">
+          <div style="font-size:13px;font-weight:600"><span class="ico" style="margin-right:4px;font-size:12px">🏠</span> № 1</div>
+          <div style="font-size:11px;color:var(--txt2)">Квартира</div>
+          <div style="font-size:12px;font-weight:600;color:var(--err);margin-top:4px">Борг</div>
+        </div>
+        <div style="border:1px solid var(--border-l);border-radius:var(--r-m);padding:10px" onclick="showToast('Деталі № 2')">
+          <div style="font-size:13px;font-weight:600"><span class="ico" style="margin-right:4px;font-size:12px">🏠</span> № 2</div>
+          <div style="font-size:11px;color:var(--txt2)">Квартира</div>
+          <div style="font-size:12px;font-weight:600;color:var(--suc);margin-top:4px">Все сплачено</div>
+        </div>
+        <div style="border:1px solid var(--border-l);border-radius:var(--r-m);padding:10px" onclick="showToast('Деталі № 3')">
+          <div style="font-size:13px;font-weight:600"><span class="ico" style="margin-right:4px;font-size:12px">🏠</span> № 3</div>
+          <div style="font-size:11px;color:var(--txt2)">Квартира</div>
+          <div style="font-size:12px;font-weight:600;color:var(--suc);margin-top:4px">Все сплачено</div>
+        </div>
+        <div style="border:1px solid var(--border-l);border-radius:var(--r-m);padding:10px" onclick="showToast('Деталі № 4')">
+          <div style="font-size:13px;font-weight:600"><span class="ico" style="margin-right:4px;font-size:12px">🏠</span> № 4</div>
+          <div style="font-size:11px;color:var(--txt2)">Квартира</div>
+          <div style="font-size:12px;font-weight:600;color:var(--err);margin-top:4px">Борг</div>
+        </div>
+        <div style="border:1px solid var(--border-l);border-radius:var(--r-m);padding:10px" onclick="showToast('Деталі № 365')">
+          <div style="font-size:13px;font-weight:600"><span class="ico" style="margin-right:4px;font-size:12px">📦</span> № 365</div>
+          <div style="font-size:11px;color:var(--txt2)">Комора</div>
+          <div style="font-size:12px;font-weight:600;color:var(--err);margin-top:4px">Борг</div>
+        </div>
+        <div style="border:1px solid var(--border-l);border-radius:var(--r-m);padding:10px" onclick="showToast('Деталі № 366')">
+          <div style="font-size:13px;font-weight:600"><span class="ico" style="margin-right:4px;font-size:12px">📦</span> № 366</div>
+          <div style="font-size:11px;color:var(--txt2)">Комора</div>
+          <div style="font-size:12px;font-weight:600;color:var(--suc);margin-top:4px">Все сплачено</div>
+        </div>
+        <div style="border:1px solid var(--border-l);border-radius:var(--r-m);padding:10px" onclick="showToast('Деталі № 367')">
+          <div style="font-size:13px;font-weight:600"><span class="ico" style="margin-right:4px;font-size:12px">📦</span> № 367</div>
+          <div style="font-size:11px;color:var(--txt2)">Комора</div>
+          <div style="font-size:12px;font-weight:600;color:#0ea5e9;margin-top:4px">Поточний платіж</div>
+        </div>
+      </div>
+      <div style="font-size:13px;font-weight:600;color:var(--txt2);display:flex;align-items:center;gap:6px"><span class="ico">📊</span> Сукупний борг поверху: 7 856,85 грн</div>
+    </div>
+  </div>
+
+  <!-- TAB 3: Стан банківських рахунків -->
+  <div id="acc-bank" style="display:none">
+    <div class="card" style="margin-bottom:12px;padding:12px 16px">
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="flex:1"><div style="font-size:10px;color:var(--txt3)">Рахунок</div><div style="font-size:13px;font-weight:500">Всі</div></div>
+      </div>
+    </div>
+    <div class="sec"><div class="sec-h"><span class="sec-t">Баланс рахунків</span><span style="font-size:12px;color:#0ea5e9;font-weight:500;cursor:pointer" onclick="showToast('Період: 08.04.2025 – 08.04.2026')">08.04.2025 – 08.04.2026 ▾</span></div></div>
+    <div class="card" style="margin-bottom:16px;padding:16px" id="chart-bank">
+      <div class="chart-loader" id="loader-bank" style="display:none"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      <div id="chart-bank-content">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+        <span style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#0ea5e9;display:inline-block"></span> Загальний фонд</span>
+        <span style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#22c55e;display:inline-block"></span> Резервний фонд</span>
+        <span style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#1e293b;display:inline-block"></span> Фонд енерг. незалежності</span>
+        <span style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#94a3b8;display:inline-block"></span> Амортизація генератора</span>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:4px;height:120px">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:1px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:55%"><span class="chart-tooltip">Загальний: 440 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#22c55e;border-radius:2px 2px 0 0;height:8%"><span class="chart-tooltip">Резервний: 64 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#1e293b;border-radius:2px 2px 0 0;height:3%"><span class="chart-tooltip">Енерг: 24 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Кві</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:1px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:60%"><span class="chart-tooltip">Загальний: 480 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#22c55e;border-radius:2px 2px 0 0;height:10%"><span class="chart-tooltip">Резервний: 80 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Тра</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:1px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:45%"><span class="chart-tooltip">Загальний: 360 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#22c55e;border-radius:2px 2px 0 0;height:7%"><span class="chart-tooltip">Резервний: 56 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Чер</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:1px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:40%"><span class="chart-tooltip">Загальний: 320 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#22c55e;border-radius:2px 2px 0 0;height:5%"><span class="chart-tooltip">Резервний: 40 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Лип</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:1px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:50%"><span class="chart-tooltip">Загальний: 400 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#22c55e;border-radius:2px 2px 0 0;height:6%"><span class="chart-tooltip">Резервний: 48 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Сер</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:1px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:80%"><span class="chart-tooltip">Загальний: 640 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#22c55e;border-radius:2px 2px 0 0;height:12%"><span class="chart-tooltip">Резервний: 96 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#1e293b;border-radius:2px 2px 0 0;height:5%"><span class="chart-tooltip">Енерг: 40 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Вер</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:1px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:75%"><span class="chart-tooltip">Загальний: 600 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#22c55e;border-radius:2px 2px 0 0;height:10%"><span class="chart-tooltip">Резервний: 80 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#1e293b;border-radius:2px 2px 0 0;height:4%"><span class="chart-tooltip">Енерг: 32 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Жов</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:1px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:70%"><span class="chart-tooltip">Загальний: 560 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#22c55e;border-radius:2px 2px 0 0;height:8%"><span class="chart-tooltip">Резервний: 64 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Лис</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:1px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:65%"><span class="chart-tooltip">Загальний: 520 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#22c55e;border-radius:2px 2px 0 0;height:9%"><span class="chart-tooltip">Резервний: 72 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Гру</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:1px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:90%"><span class="chart-tooltip">Загальний: 720 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#22c55e;border-radius:2px 2px 0 0;height:12%"><span class="chart-tooltip">Резервний: 96 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#1e293b;border-radius:2px 2px 0 0;height:5%"><span class="chart-tooltip">Енерг: 40 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Січ</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:1px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:85%"><span class="chart-tooltip">Загальний: 680 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#22c55e;border-radius:2px 2px 0 0;height:11%"><span class="chart-tooltip">Резервний: 88 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#1e293b;border-radius:2px 2px 0 0;height:4%"><span class="chart-tooltip">Енерг: 32 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Лют</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:1px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:95%"><span class="chart-tooltip">Загальний: 760 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#22c55e;border-radius:2px 2px 0 0;height:14%"><span class="chart-tooltip">Резервний: 112 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#1e293b;border-radius:2px 2px 0 0;height:6%"><span class="chart-tooltip">Енерг: 48 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Бер</span>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: Рух коштів -->
+  <div id="acc-cashflow" style="display:none">
+    <div class="card" style="margin-bottom:12px;padding:12px 16px">
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="flex:1"><div style="font-size:10px;color:var(--txt3)">Рахунок</div><div style="font-size:13px;font-weight:500">Всі</div></div>
+      </div>
+    </div>
+    <div class="sec"><div class="sec-h"><span class="sec-t">Рух коштів</span><span style="font-size:12px;color:#0ea5e9;font-weight:500;cursor:pointer" onclick="showToast('Період: 08.04.2025 – 08.04.2026')">08.04.2025 – 08.04.2026 ▾</span></div></div>
+    <div class="card" style="margin-bottom:16px;padding:16px" id="chart-cashflow">
+      <div class="chart-loader" id="loader-cashflow" style="display:none"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      <div id="chart-cashflow-content">
+      <div style="display:flex;gap:12px;margin-bottom:12px">
+        <span style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#0ea5e9;display:inline-block"></span> Надходження</span>
+        <span style="font-size:11px;display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#84cc16;display:inline-block"></span> Видатки</span>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:4px;height:120px">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:2px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:40%"><span class="chart-tooltip">Надходж: 320 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#84cc16;border-radius:2px 2px 0 0;height:35%"><span class="chart-tooltip">Видатки: 280 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Кві</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:2px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:50%"><span class="chart-tooltip">Надходж: 400 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#84cc16;border-radius:2px 2px 0 0;height:42%"><span class="chart-tooltip">Видатки: 336 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Тра</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:2px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:45%"><span class="chart-tooltip">Надходж: 360 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#84cc16;border-radius:2px 2px 0 0;height:38%"><span class="chart-tooltip">Видатки: 304 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Чер</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:2px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:35%"><span class="chart-tooltip">Надходж: 280 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#84cc16;border-radius:2px 2px 0 0;height:30%"><span class="chart-tooltip">Видатки: 240 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Лип</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:2px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:38%"><span class="chart-tooltip">Надходж: 304 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#84cc16;border-radius:2px 2px 0 0;height:32%"><span class="chart-tooltip">Видатки: 256 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Сер</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:2px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:55%"><span class="chart-tooltip">Надходж: 440 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#84cc16;border-radius:2px 2px 0 0;height:48%"><span class="chart-tooltip">Видатки: 384 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Вер</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:2px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:52%"><span class="chart-tooltip">Надходж: 416 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#84cc16;border-radius:2px 2px 0 0;height:45%"><span class="chart-tooltip">Видатки: 360 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Жов</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:2px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:48%"><span class="chart-tooltip">Надходж: 384 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#84cc16;border-radius:2px 2px 0 0;height:40%"><span class="chart-tooltip">Видатки: 320 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Лис</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:2px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:90%"><span class="chart-tooltip">Надходж: 720 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#84cc16;border-radius:2px 2px 0 0;height:85%"><span class="chart-tooltip">Видатки: 680 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Гру</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:2px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:95%"><span class="chart-tooltip">Надходж: 760 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#84cc16;border-radius:2px 2px 0 0;height:80%"><span class="chart-tooltip">Видатки: 640 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Січ</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:2px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:85%"><span class="chart-tooltip">Надходж: 680 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#84cc16;border-radius:2px 2px 0 0;height:72%"><span class="chart-tooltip">Видатки: 576 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Лют</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="display:flex;gap:2px;align-items:flex-end;height:100px;width:100%">
+            <div class="chart-bar" style="flex:1;background:#0ea5e9;border-radius:2px 2px 0 0;height:88%"><span class="chart-tooltip">Надходж: 704 тис ₴</span></div>
+            <div class="chart-bar" style="flex:1;background:#84cc16;border-radius:2px 2px 0 0;height:75%"><span class="chart-tooltip">Видатки: 600 тис ₴</span></div>
+          </div>
+          <span style="font-size:9px;color:var(--txt3)">Бер</span>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- Надходження / Видатки по категоріям -->
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+      <div class="card" style="flex:1;min-width:200px;padding:16px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:12px">Надходження по категоріям</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#0ea5e9;flex-shrink:0"></span><span style="font-size:12px;flex:1">Утримання</span><span style="font-size:12px;font-weight:600">45%</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#22c55e;flex-shrink:0"></span><span style="font-size:12px;flex:1">Ремонт</span><span style="font-size:12px;font-weight:600">18%</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#1e293b;flex-shrink:0"></span><span style="font-size:12px;flex:1">Резервний фонд</span><span style="font-size:12px;font-weight:600">12%</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#f59e0b;flex-shrink:0"></span><span style="font-size:12px;flex:1">Електропостачання</span><span style="font-size:12px;font-weight:600">10%</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#a855f7;flex-shrink:0"></span><span style="font-size:12px;flex:1">КВП</span><span style="font-size:12px;font-weight:600">8%</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#ef4444;flex-shrink:0"></span><span style="font-size:12px;flex:1">Інше</span><span style="font-size:12px;font-weight:600">7%</span></div>
+        </div>
+      </div>
+      <div class="card" style="flex:1;min-width:200px;padding:16px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:12px">Видатки по категоріям</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#0ea5e9;flex-shrink:0"></span><span style="font-size:12px;flex:1">Утримання будинку</span><span style="font-size:12px;font-weight:600">38%</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#22c55e;flex-shrink:0"></span><span style="font-size:12px;flex:1">Поточний ремонт</span><span style="font-size:12px;font-weight:600">22%</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#f59e0b;flex-shrink:0"></span><span style="font-size:12px;flex:1">Електроенергія</span><span style="font-size:12px;font-weight:600">15%</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#a855f7;flex-shrink:0"></span><span style="font-size:12px;flex:1">Водопостачання</span><span style="font-size:12px;font-weight:600">12%</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#ef4444;flex-shrink:0"></span><span style="font-size:12px;flex:1">Охорона</span><span style="font-size:12px;font-weight:600">8%</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#94a3b8;flex-shrink:0"></span><span style="font-size:12px;flex:1">Інше</span><span style="font-size:12px;font-weight:600">5%</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- PAGE: Property -->
@@ -1241,6 +1913,35 @@ function showSupportTab(tab){
   document.getElementById('support-done').style.display=tab==='done'?'block':'none';
   document.getElementById('support-all').style.display=tab==='all'?'block':'none';
 }
+
+// === ACCOUNTING TABS ===
+function showAccTab(tab){
+  var tabs=['rozrah','radar','bank','cashflow'];
+  tabs.forEach(function(t){
+    var el=document.getElementById('acc-'+t);
+    if(el)el.style.display=t===tab?'block':'none';
+  });
+  var btns=document.querySelectorAll('#accTabs .tab');
+  btns.forEach(function(b,i){b.classList.toggle('active',tabs[i]===tab);});
+  var loaderMap={rozrah:'loader-rozrah',bank:'loader-bank',cashflow:'loader-cashflow'};
+  var contentMap={rozrah:'chart-rozrah-content',bank:'chart-bank-content',cashflow:'chart-cashflow-content'};
+  if(loaderMap[tab]){
+    var loader=document.getElementById(loaderMap[tab]);
+    var content=document.getElementById(contentMap[tab]);
+    if(loader&&content){
+      loader.style.display='flex';content.style.display='none';
+      setTimeout(function(){loader.style.display='none';content.style.display='block';},800);
+    }
+  }
+}
+function showRadarLoader(){
+  showToast('Оновлення даних...');
+}
+(function(){
+  var l=document.getElementById('loader-rozrah');
+  var c=document.getElementById('chart-rozrah-content');
+  if(l&&c){l.style.display='flex';c.style.display='none';setTimeout(function(){l.style.display='none';c.style.display='block';},1200);}
+})();
 
 // === KEYS / PASSES TABS ===
 function showKeysTab(tab){
